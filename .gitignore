@@ -1,0 +1,24 @@
+node_modules/
+dist/
+build/
+.output/
+.vinxi/
+.tanstack/
+.cache/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+.DS_Store
+
+# Secrets and local data
+.env
+.env.*
+!.env.example
+strapi/.tmp/
+strapi/public/uploads/*
+!strapi/public/uploads/.gitkeep
+app/line/qr/
+
+# Agent working files
+.superpowers/
