@@ -68,6 +68,20 @@ describe('registerMcp', () => {
     }
   });
 
+  it('logs how many tools and prompts it registered, so the start-up log shows them', () => {
+    const all = fakeStrapi({ mcp: fakeMcp(true) });
+    registerMcp(all);
+    expect(all.log.info).toHaveBeenCalledExactlyOnceWith('[maison] MCP registered. Tools: 13. Prompts: 1.');
+
+    const fewer = fakeStrapi({ mcp: fakeMcp(true), config: { disabledTools: ['find_boutiques', 'record_confirmation'] } });
+    registerMcp(fewer);
+    expect(fewer.log.info).toHaveBeenCalledExactlyOnceWith('[maison] MCP registered. Tools: 11. Prompts: 0.');
+
+    const off = fakeStrapi({ mcp: fakeMcp(false) });
+    registerMcp(off);
+    expect(off.log.info).not.toHaveBeenCalled();
+  });
+
   it('never claims a name Strapi generates for content types', () => {
     // Content Manager registers list_/get_/create_/update_/delete_/publish_/unpublish_/write_/discard_
     // tools for every content type in the host app (get_product for api::product.product), and a

@@ -1490,6 +1490,171 @@ export interface PluginReviewWorkflowsWorkflowStage
   };
 }
 
+export interface PluginStrapiOauthMcpManagerMcpOauthClient
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'mcp_oauth_clients';
+  info: {
+    description: 'OAuth clients allowed to connect to the Strapi MCP server';
+    displayName: 'MCP OAuth Client';
+    pluralName: 'mcp-oauth-clients';
+    singularName: 'mcp-oauth-client';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  pluginOptions: {
+    'content-manager': {
+      visible: false;
+    };
+    'content-type-builder': {
+      visible: false;
+    };
+  };
+  attributes: {
+    active: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    adminTokenId: Schema.Attribute.Integer;
+    clientId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    clientSecret: Schema.Attribute.String & Schema.Attribute.Private;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
+    endUserProvider: Schema.Attribute.Enumeration<['none', 'line']> &
+      Schema.Attribute.DefaultTo<'none'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'plugin::strapi-oauth-mcp-manager.mcp-oauth-client'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    redirectUris: Schema.Attribute.JSON;
+    registrationType: Schema.Attribute.Enumeration<['manual', 'dynamic']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'manual'>;
+    tokenEndpointAuthMethod: Schema.Attribute.Enumeration<
+      ['client_secret_basic', 'client_secret_post', 'none']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'client_secret_post'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface PluginStrapiOauthMcpManagerMcpOauthCode
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'mcp_oauth_codes';
+  info: {
+    description: 'Short-lived OAuth authorization codes';
+    displayName: 'MCP OAuth Code';
+    pluralName: 'mcp-oauth-codes';
+    singularName: 'mcp-oauth-code';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  pluginOptions: {
+    'content-manager': {
+      visible: false;
+    };
+    'content-type-builder': {
+      visible: false;
+    };
+  };
+  attributes: {
+    adminTokenId: Schema.Attribute.Integer;
+    adminUserId: Schema.Attribute.Integer & Schema.Attribute.Required;
+    clientId: Schema.Attribute.String & Schema.Attribute.Required;
+    codeChallenge: Schema.Attribute.String;
+    codeChallengeMethod: Schema.Attribute.String;
+    codeHash: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    expiresAt: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'plugin::strapi-oauth-mcp-manager.mcp-oauth-code'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    redirectUri: Schema.Attribute.Text & Schema.Attribute.Required;
+    resource: Schema.Attribute.String;
+    scope: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface PluginStrapiOauthMcpManagerMcpOauthToken
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'mcp_oauth_grants';
+  info: {
+    description: 'An authorized MCP client session, backed by an admin token';
+    displayName: 'MCP OAuth Grant';
+    pluralName: 'mcp-oauth-tokens';
+    singularName: 'mcp-oauth-token';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  pluginOptions: {
+    'content-manager': {
+      visible: false;
+    };
+    'content-type-builder': {
+      visible: false;
+    };
+  };
+  attributes: {
+    accessTokenHash: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique;
+    adminKeyHash: Schema.Attribute.String & Schema.Attribute.Private;
+    adminTokenId: Schema.Attribute.Integer & Schema.Attribute.Required;
+    adminUserId: Schema.Attribute.Integer & Schema.Attribute.Required;
+    clientId: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    expiresAt: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    lastUsedAt: Schema.Attribute.DateTime;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'plugin::strapi-oauth-mcp-manager.mcp-oauth-token'
+    > &
+      Schema.Attribute.Private;
+    ownsAdminToken: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    previousRefreshTokenHash: Schema.Attribute.String &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    refreshExpiresAt: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    refreshTokenHash: Schema.Attribute.String &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique;
+    resource: Schema.Attribute.String;
+    rotatedAt: Schema.Attribute.DateTime;
+    scope: Schema.Attribute.String;
+    subject: Schema.Attribute.String & Schema.Attribute.Private;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface PluginUploadFile extends Struct.CollectionTypeSchema {
   collectionName: 'files';
   info: {
@@ -1780,6 +1945,9 @@ declare module '@strapi/strapi' {
       'plugin::maison.stock-level': PluginMaisonStockLevel;
       'plugin::review-workflows.workflow': PluginReviewWorkflowsWorkflow;
       'plugin::review-workflows.workflow-stage': PluginReviewWorkflowsWorkflowStage;
+      'plugin::strapi-oauth-mcp-manager.mcp-oauth-client': PluginStrapiOauthMcpManagerMcpOauthClient;
+      'plugin::strapi-oauth-mcp-manager.mcp-oauth-code': PluginStrapiOauthMcpManagerMcpOauthCode;
+      'plugin::strapi-oauth-mcp-manager.mcp-oauth-token': PluginStrapiOauthMcpManagerMcpOauthToken;
       'plugin::upload.file': PluginUploadFile;
       'plugin::upload.folder': PluginUploadFolder;
       'plugin::users-permissions.permission': PluginUsersPermissionsPermission;

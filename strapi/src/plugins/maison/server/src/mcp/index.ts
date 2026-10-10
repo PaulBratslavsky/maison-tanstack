@@ -27,19 +27,29 @@ export const registerMcp = (strapi: Core.Strapi) => {
   const disabled = new Set<string>(getConfig(strapi).disabledTools);
   const enabled = (name: ToolName) => !disabled.has(name);
 
-  if (enabled('browse_collections')) mcp.registerTool(browseCollectionsTool);
-  if (enabled('search_products')) mcp.registerTool(searchProductsTool);
-  if (enabled('view_product')) mcp.registerTool(viewProductTool);
-  if (enabled('find_boutiques')) mcp.registerTool(findBoutiquesTool);
-  if (enabled('search_knowledge')) mcp.registerTool(searchKnowledgeTool);
-  if (enabled('request_appointment')) mcp.registerTool(requestAppointmentTool);
-  if (enabled('my_appointments')) mcp.registerTool(myAppointmentsTool);
-  if (enabled('hand_off_to_staff')) mcp.registerTool(handOffToStaffTool);
-  if (enabled('log_inquiry')) mcp.registerTool(logInquiryTool);
-  if (enabled('appointment_requests')) mcp.registerTool(appointmentRequestsTool);
-  if (enabled('confirm_appointment')) mcp.registerTool(confirmAppointmentTool);
-  if (enabled('pending_confirmations')) mcp.registerTool(pendingConfirmationsTool);
-  if (enabled('record_confirmation')) mcp.registerTool(recordConfirmationTool);
+  let tools = 0;
+  /** Registers a tool unless its name is in disabledTools, and counts it. */
+  const add = (name: ToolName, register: () => void) => {
+    if (!enabled(name)) return;
+    register();
+    tools += 1;
+  };
+
+  add('browse_collections', () => mcp.registerTool(browseCollectionsTool));
+  add('search_products', () => mcp.registerTool(searchProductsTool));
+  add('view_product', () => mcp.registerTool(viewProductTool));
+  add('find_boutiques', () => mcp.registerTool(findBoutiquesTool));
+  add('search_knowledge', () => mcp.registerTool(searchKnowledgeTool));
+  add('request_appointment', () => mcp.registerTool(requestAppointmentTool));
+  add('my_appointments', () => mcp.registerTool(myAppointmentsTool));
+  add('hand_off_to_staff', () => mcp.registerTool(handOffToStaffTool));
+  add('log_inquiry', () => mcp.registerTool(logInquiryTool));
+  add('appointment_requests', () => mcp.registerTool(appointmentRequestsTool));
+  add('confirm_appointment', () => mcp.registerTool(confirmAppointmentTool));
+  add('pending_confirmations', () => mcp.registerTool(pendingConfirmationsTool));
+  add('record_confirmation', () => mcp.registerTool(recordConfirmationTool));
   // The prompt walks the agent through both confirmation tools, so it is useless (and misleading) unless both are registered.
-  if (enabled('pending_confirmations') && enabled('record_confirmation')) mcp.registerPrompt(sendPendingConfirmationsPrompt);
+  const prompts = enabled('pending_confirmations') && enabled('record_confirmation') ? 1 : 0;
+  if (prompts) mcp.registerPrompt(sendPendingConfirmationsPrompt);
+  strapi.log.info(`[maison] MCP registered. Tools: ${tools}. Prompts: ${prompts}.`);
 };
