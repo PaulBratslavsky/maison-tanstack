@@ -1,0 +1,42 @@
+data: {"type":"RUN_STARTED","runId":"run-1","threadId":"thread-1","timestamp":0}
+
+data: {"type":"TEXT_MESSAGE_START","messageId":"message-1","role":"assistant","timestamp":0}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"message-1","delta":"Here are three pieces for a friend who travels.","timestamp":0}
+
+data: {"type":"TEXT_MESSAGE_END","messageId":"message-1","timestamp":0}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call-search","toolCallName":"search_products","parentMessageId":"message-1","timestamp":0,"metadata":{"tanstack":{"index":0}}}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call-search","delta":"{\"query\":\"travel gift\",\"maxPriceJpy\":400000}","timestamp":0}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call-search","timestamp":0,"metadata":{"tanstack":{"toolCallName":"search_products","toolName":"search_products","input":{"query":"travel gift","maxPriceJpy":400000}}}}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call-date","toolCallName":"resolve_date","parentMessageId":"message-1","timestamp":0,"metadata":{"tanstack":{"index":1}}}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call-date","delta":"{\"weekday\":\"saturday\"}","timestamp":0}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call-date","timestamp":0,"metadata":{"tanstack":{"toolCallName":"resolve_date","toolName":"resolve_date","input":{"weekday":"saturday"}}}}
+
+data: {"type":"RUN_FINISHED","runId":"run-1","threadId":"thread-1","timestamp":0,"metadata":{"tanstack":{"finishReason":"tool_calls"}}}
+
+data: {"type":"TOOL_CALL_RESULT","timestamp":0,"messageId":"message-1","toolCallId":"call-search","content":"{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"products\\\":[{\\\"slug\\\":\\\"weekender-50\\\",\\\"name\\\":\\\"Weekender 50\\\",\\\"category\\\":\\\"bags\\\",\\\"priceJpy\\\":385000,\\\"imageUrl\\\":null,\\\"occasions\\\":[\\\"travel\\\"],\\\"personalizable\\\":true,\\\"inStockAt\\\":[\\\"ginza\\\"]},{\\\"slug\\\":\\\"carnet-wallet\\\",\\\"name\\\":\\\"Carnet Wallet\\\",\\\"category\\\":\\\"small-leather-goods\\\",\\\"priceJpy\\\":98000,\\\"imageUrl\\\":null,\\\"occasions\\\":[\\\"travel\\\"],\\\"personalizable\\\":true,\\\"inStockAt\\\":[\\\"ginza\\\"]},{\\\"slug\\\":\\\"passport-cover\\\",\\\"name\\\":\\\"Passport Cover\\\",\\\"category\\\":\\\"small-leather-goods\\\",\\\"priceJpy\\\":64000,\\\"imageUrl\\\":null,\\\"occasions\\\":[\\\"travel\\\"],\\\"personalizable\\\":true,\\\"inStockAt\\\":[\\\"ginza\\\"]}]}\"}],\"structuredContent\":{\"products\":[{\"slug\":\"weekender-50\",\"name\":\"Weekender 50\",\"category\":\"bags\",\"priceJpy\":385000,\"imageUrl\":null,\"occasions\":[\"travel\"],\"personalizable\":true,\"inStockAt\":[\"ginza\"]},{\"slug\":\"carnet-wallet\",\"name\":\"Carnet Wallet\",\"category\":\"small-leather-goods\",\"priceJpy\":98000,\"imageUrl\":null,\"occasions\":[\"travel\"],\"personalizable\":true,\"inStockAt\":[\"ginza\"]},{\"slug\":\"passport-cover\",\"name\":\"Passport Cover\",\"category\":\"small-leather-goods\",\"priceJpy\":64000,\"imageUrl\":null,\"occasions\":[\"travel\"],\"personalizable\":true,\"inStockAt\":[\"ginza\"]}]}}","role":"tool"}
+
+data: {"type":"TOOL_CALL_RESULT","timestamp":0,"messageId":"message-1","toolCallId":"call-date","content":"{\"date\":\"2026-10-10\",\"weekday\":\"Saturday\",\"isPast\":false}","role":"tool"}
+
+data: {"type":"TEXT_MESSAGE_START","messageId":"message-2","role":"assistant","timestamp":0}
+
+data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"message-2","delta":"I set the form to Saturday at 2 pm in Ginza. Check it and send the request.","timestamp":0}
+
+data: {"type":"TEXT_MESSAGE_END","messageId":"message-2","timestamp":0}
+
+data: {"type":"TOOL_CALL_START","toolCallId":"call-picker","toolCallName":"choose_visit","parentMessageId":"message-2","timestamp":0,"metadata":{"tanstack":{"index":0}}}
+
+data: {"type":"TOOL_CALL_ARGS","toolCallId":"call-picker","delta":"{\"productSlugs\":[\"weekender-50\"],\"boutique\":\"ginza\",\"date\":\"2026-10-10\",\"time\":\"14:00\"}","timestamp":0}
+
+data: {"type":"TOOL_CALL_END","toolCallId":"call-picker","timestamp":0,"metadata":{"tanstack":{"toolCallName":"choose_visit","toolName":"choose_visit","input":{"productSlugs":["weekender-50"],"boutique":"ginza","date":"2026-10-10","time":"14:00"}}}}
+
+data: {"type":"MESSAGES_SNAPSHOT","timestamp":0,"messages":[{"id":"u1","role":"user","content":"I'm looking for a gift under ¥400,000 for a friend who travels. Could I see it in Ginza on Saturday at 2 pm?"},{"id":"message-1","metadata":{"tanstack":{"createdAt":"2026-10-10T00:00:00.000Z"}},"role":"assistant","content":"Here are three pieces for a friend who travels.","toolCalls":[{"id":"call-search","type":"function","function":{"name":"search_products","arguments":"{\"query\":\"travel gift\",\"maxPriceJpy\":400000}"}},{"id":"call-date","type":"function","function":{"name":"resolve_date","arguments":"{\"weekday\":\"saturday\"}"}}]},{"role":"tool","id":"snapshot_run-1_2","toolCallId":"call-search","content":"{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"products\\\":[{\\\"slug\\\":\\\"weekender-50\\\",\\\"name\\\":\\\"Weekender 50\\\",\\\"category\\\":\\\"bags\\\",\\\"priceJpy\\\":385000,\\\"imageUrl\\\":null,\\\"occasions\\\":[\\\"travel\\\"],\\\"personalizable\\\":true,\\\"inStockAt\\\":[\\\"ginza\\\"]},{\\\"slug\\\":\\\"carnet-wallet\\\",\\\"name\\\":\\\"Carnet Wallet\\\",\\\"category\\\":\\\"small-leather-goods\\\",\\\"priceJpy\\\":98000,\\\"imageUrl\\\":null,\\\"occasions\\\":[\\\"travel\\\"],\\\"personalizable\\\":true,\\\"inStockAt\\\":[\\\"ginza\\\"]},{\\\"slug\\\":\\\"passport-cover\\\",\\\"name\\\":\\\"Passport Cover\\\",\\\"category\\\":\\\"small-leather-goods\\\",\\\"priceJpy\\\":64000,\\\"imageUrl\\\":null,\\\"occasions\\\":[\\\"travel\\\"],\\\"personalizable\\\":true,\\\"inStockAt\\\":[\\\"ginza\\\"]}]}\"}],\"structuredContent\":{\"products\":[{\"slug\":\"weekender-50\",\"name\":\"Weekender 50\",\"category\":\"bags\",\"priceJpy\":385000,\"imageUrl\":null,\"occasions\":[\"travel\"],\"personalizable\":true,\"inStockAt\":[\"ginza\"]},{\"slug\":\"carnet-wallet\",\"name\":\"Carnet Wallet\",\"category\":\"small-leather-goods\",\"priceJpy\":98000,\"imageUrl\":null,\"occasions\":[\"travel\"],\"personalizable\":true,\"inStockAt\":[\"ginza\"]},{\"slug\":\"passport-cover\",\"name\":\"Passport Cover\",\"category\":\"small-leather-goods\",\"priceJpy\":64000,\"imageUrl\":null,\"occasions\":[\"travel\"],\"personalizable\":true,\"inStockAt\":[\"ginza\"]}]}}","metadata":{"tanstack":{"toolResult":{"id":"snapshot_run-1_2"}}}},{"role":"tool","id":"snapshot_run-1_3","toolCallId":"call-date","content":"{\"date\":\"2026-10-10\",\"weekday\":\"Saturday\",\"isPast\":false}","metadata":{"tanstack":{"toolResult":{"id":"snapshot_run-1_3"}}}},{"id":"message-2","metadata":{"tanstack":{"createdAt":"2026-10-10T00:00:00.000Z"}},"role":"assistant","content":"I set the form to Saturday at 2 pm in Ginza. Check it and send the request.","toolCalls":[{"id":"call-picker","type":"function","function":{"name":"choose_visit","arguments":"{\"productSlugs\":[\"weekender-50\"],\"boutique\":\"ginza\",\"date\":\"2026-10-10\",\"time\":\"14:00\"}"}}]}]}
+
+data: {"type":"RUN_FINISHED","runId":"run-1","threadId":"thread-1","timestamp":0,"outcome":{"type":"interrupt","interrupts":[{"id":"client_tool_call-picker","reason":"tanstack:client_tool_execution","message":"Client tool choose_visit is ready to run","toolCallId":"call-picker","responseSchema":{},"metadata":{"kind":"client_tool","toolName":"choose_visit","input":{"productSlugs":["weekender-50"],"boutique":"ginza","date":"2026-10-10","time":"14:00"},"tanstack:interruptBinding":{"v":1,"kind":"client-tool-execution","interruptId":"client_tool_call-picker","toolName":"choose_visit","toolCallId":"call-picker","outputSchemaHash":"sha256:eb045d78d273107348b0300c01d29b7552d622abbc6faf81b3ec55359aa9950c","responseSchemaHash":"sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a","interruptedRunId":"run-1","generation":0}}}]},"metadata":{"tanstack":{"finishReason":"tool_calls"}}}
+
