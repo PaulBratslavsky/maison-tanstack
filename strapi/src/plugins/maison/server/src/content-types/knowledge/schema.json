@@ -1,0 +1,24 @@
+{
+  "kind": "collectionType",
+  "collectionName": "maison_knowledge_entries",
+  "info": {
+    "singularName": "knowledge",
+    "pluralName": "knowledge-entries",
+    "displayName": "Maison product knowledge",
+    "description": "What Maison has written down for customers: care, materials, sizing, delivery, repairs and more. The concierge answers only from published entries."
+  },
+  "options": { "draftAndPublish": true },
+  "pluginOptions": { "i18n": { "localized": true }, "content-manager": { "visible": true }, "content-type-builder": { "visible": false } },
+  "attributes": {
+    "title": { "type": "string", "required": true, "maxLength": 200, "pluginOptions": { "i18n": { "localized": true } } },
+    "answer": { "type": "text", "required": true, "maxLength": 2000, "pluginOptions": { "i18n": { "localized": true } } },
+    "category": {
+      "type": "enumeration",
+      "enum": ["care", "materials", "sizing", "personalization", "delivery", "returns", "repairs", "warranty", "gifting", "store"],
+      "required": true,
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "productSlugs": { "type": "json", "pluginOptions": { "i18n": { "localized": false } } },
+    "keywords": { "type": "text", "maxLength": 500, "pluginOptions": { "i18n": { "localized": true } } }
+  }
+}

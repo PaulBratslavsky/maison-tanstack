@@ -1,0 +1,15 @@
+{
+  "kind": "collectionType",
+  "collectionName": "maison_notifications",
+  "info": { "singularName": "notification", "pluralName": "notifications", "displayName": "Maison notification", "description": "Append-only log of confirmation delivery attempts, and of demo customers' visits, which get no LINE message." },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": { "content-manager": { "visible": true }, "content-type-builder": { "visible": false } },
+  "attributes": {
+    "appointmentReference": { "type": "string", "required": true },
+    "channel": { "type": "enumeration", "enum": ["line"], "default": "line", "required": true },
+    "outcome": { "type": "enumeration", "enum": ["sent", "failed", "demo"], "required": true },
+    "sentAt": { "type": "datetime", "required": true },
+    "detail": { "type": "text", "maxLength": 500 },
+    "recordedBy": { "type": "string" }
+  }
+}

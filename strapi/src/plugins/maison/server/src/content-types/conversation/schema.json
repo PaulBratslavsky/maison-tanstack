@@ -1,0 +1,17 @@
+{
+  "kind": "collectionType",
+  "collectionName": "maison_conversations",
+  "info": {
+    "singularName": "conversation",
+    "pluralName": "conversations",
+    "displayName": "Maison assistant chat",
+    "description": "A chat in the assistant drawer, saved for the admin who had it. Only that admin can open it in the assistant."
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": { "content-manager": { "visible": false }, "content-type-builder": { "visible": false } },
+  "attributes": {
+    "title": { "type": "text", "required": true },
+    "messages": { "type": "json", "required": true },
+    "adminUserId": { "type": "integer", "required": true }
+  }
+}

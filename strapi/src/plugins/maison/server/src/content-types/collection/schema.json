@@ -1,0 +1,14 @@
+{
+  "kind": "collectionType",
+  "collectionName": "maison_collections",
+  "info": { "singularName": "collection", "pluralName": "collections", "displayName": "Maison collection", "description": "A group of products, for example travel pieces." },
+  "options": { "draftAndPublish": true },
+  "pluginOptions": { "i18n": { "localized": true }, "content-manager": { "visible": true }, "content-type-builder": { "visible": false } },
+  "attributes": {
+    "name": { "type": "string", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "slug": { "type": "uid", "targetField": "name", "required": true },
+    "story": { "type": "blocks", "pluginOptions": { "i18n": { "localized": true } } },
+    "heroImage": { "type": "media", "multiple": false, "allowedTypes": ["images"], "pluginOptions": { "i18n": { "localized": false } } },
+    "products": { "type": "relation", "relation": "oneToMany", "target": "plugin::maison.product", "mappedBy": "collection" }
+  }
+}

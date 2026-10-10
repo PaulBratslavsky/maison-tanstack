@@ -1,0 +1,16 @@
+{
+  "kind": "collectionType",
+  "collectionName": "maison_boutiques",
+  "info": { "singularName": "boutique", "pluralName": "boutiques", "displayName": "Maison boutique", "description": "A store customers can visit." },
+  "options": { "draftAndPublish": true },
+  "pluginOptions": { "i18n": { "localized": true }, "content-manager": { "visible": true }, "content-type-builder": { "visible": false } },
+  "attributes": {
+    "name": { "type": "string", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "slug": { "type": "uid", "targetField": "name", "required": true },
+    "city": { "type": "string", "pluginOptions": { "i18n": { "localized": true } } },
+    "address": { "type": "text", "pluginOptions": { "i18n": { "localized": true } } },
+    "openingHours": { "type": "json", "required": true, "pluginOptions": { "i18n": { "localized": false } } },
+    "image": { "type": "media", "multiple": false, "allowedTypes": ["images"], "pluginOptions": { "i18n": { "localized": false } } },
+    "appointments": { "type": "relation", "relation": "oneToMany", "target": "plugin::maison.appointment", "mappedBy": "boutique" }
+  }
+}

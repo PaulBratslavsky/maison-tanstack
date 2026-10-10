@@ -1,0 +1,18 @@
+{
+  "kind": "collectionType",
+  "collectionName": "maison_appointments",
+  "info": { "singularName": "appointment", "pluralName": "appointments", "displayName": "Maison appointment", "description": "A boutique visit request. Publishing it confirms it." },
+  "options": { "draftAndPublish": true },
+  "pluginOptions": { "content-manager": { "visible": true }, "content-type-builder": { "visible": false } },
+  "config": { "attributes": { "customer": { "hidden": true } } },
+  "attributes": {
+    "reference": { "type": "string", "required": true },
+    "customer": { "type": "string", "required": true, "private": true, "visible": false, "searchable": false },
+    "boutique": { "type": "relation", "relation": "manyToOne", "target": "plugin::maison.boutique", "inversedBy": "appointments" },
+    "products": { "type": "relation", "relation": "manyToMany", "target": "plugin::maison.product", "inversedBy": "appointments" },
+    "requestedFor": { "type": "datetime", "required": true },
+    "customerNote": { "type": "text", "maxLength": 500 },
+    "createdVia": { "type": "enumeration", "enum": ["concierge", "app", "web"], "default": "app" },
+    "language": { "type": "enumeration", "enum": ["ja", "en"], "default": "ja" }
+  }
+}

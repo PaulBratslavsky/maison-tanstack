@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import activity from '../../server/seed/activity.json';
 import content from '../../server/seed/content.json';
 import knowledge from '../../server/seed/knowledge.json';
-// The checks that each seeded text fits its content type's maxLength come back with the content types (task 2.4).
+import appointmentSchema from '../../server/src/content-types/appointment/schema.json';
+import inquirySchema from '../../server/src/content-types/inquiry/schema.json';
+import questionSchema from '../../server/src/content-types/question/schema.json';
 import { CREATED_VIA, INQUIRY_KINDS, LOCALES, QUESTION_REASONS } from '../../server/src/constants';
 import {
   DEMO_MODEL_VERSION,
@@ -255,6 +257,7 @@ describe('the demo activity seed', () => {
       for (const customer of activity.customers) {
         expect(parseSubject(customer.subject), customer.key).toBe(customer.subject);
         expect(customer.name.trim().length, customer.key).toBeGreaterThan(0);
+        expect(customer.name.length, customer.key).toBeLessThanOrEqual(questionSchema.attributes.customerName.maxLength);
       }
     });
 
@@ -285,6 +288,7 @@ describe('the demo activity seed', () => {
       for (const visit of activity.appointments) expect(CREATED_VIA, visit.customer).toContain(visit.createdVia);
       const notes = activity.appointments.flatMap((visit) => (visit.note ? [visit.note] : []));
       expect(notes).toHaveLength(2);
+      for (const note of notes) expect(note.length).toBeLessThanOrEqual(Math.min(appointmentSchema.attributes.customerNote.maxLength, 120));
     });
   });
 
@@ -306,6 +310,7 @@ describe('the demo activity seed', () => {
       const answered = activity.questions.find((question) => question.status === 'answered');
       expect(answered?.staffName).toBeTruthy();
       expect(answered?.answer?.trim().length).toBeGreaterThan(0);
+      expect(answered?.answer?.length).toBeLessThanOrEqual(questionSchema.attributes.answer.maxLength);
       expect(answered?.answeredHoursAgo).toBeGreaterThan(0);
       expect(answered?.answeredHoursAgo).toBeLessThan(answered?.hoursAgo as number);
       for (const question of activity.questions.filter(({ status }) => status === 'open')) {
@@ -319,6 +324,7 @@ describe('the demo activity seed', () => {
       const aboutPieces = activity.questions.flatMap((question) => (question.productSlug ? [question.productSlug] : []));
       expect(aboutPieces.length).toBeGreaterThanOrEqual(2);
       for (const slug of aboutPieces) expect(productSlugs.has(slug), slug).toBe(true);
+      for (const question of activity.questions) expect(question.question.length).toBeLessThanOrEqual(questionSchema.attributes.question.maxLength);
     });
 
     it("each come with the concierge's hand-off reply, labelled as a question it didn't answer", () => {
@@ -375,10 +381,23 @@ describe('the demo activity seed', () => {
       expect(INQUIRY_KINDS).toContain(label.kind);
       expect(label.sentimentScore).toBeGreaterThanOrEqual(-1);
       expect(label.sentimentScore).toBeLessThanOrEqual(1);
+      expect(label.reason.length, label.reason).toBeLessThanOrEqual(inquirySchema.attributes.reason.maxLength);
+      expect(label.topic.length, label.topic).toBeLessThanOrEqual(inquirySchema.attributes.topic.maxLength);
       expect(label.reason, label.reason).not.toMatch(JAPANESE);
       expect(label.topic, label.topic).not.toMatch(JAPANESE);
       // One or two sentences.
       expect(label.reason.split(/[.!?](\s|$)/).filter((part) => part.trim().length > 1).length, label.reason).toBeLessThanOrEqual(2);
+    }
+  });
+
+  it('fits every message and reply in what the inquiry content type holds', () => {
+    const turns = [
+      ...activity.questions.map((question) => ({ message: question.question, reply: question.handOff.reply })),
+      ...activity.inquiries,
+    ];
+    for (const { message, reply } of turns) {
+      expect(message.length).toBeLessThanOrEqual(inquirySchema.attributes.message.maxLength);
+      expect(reply.length).toBeLessThanOrEqual(inquirySchema.attributes.reply.maxLength);
     }
   });
 

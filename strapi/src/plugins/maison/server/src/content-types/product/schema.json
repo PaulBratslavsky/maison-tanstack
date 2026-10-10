@@ -1,0 +1,26 @@
+{
+  "kind": "collectionType",
+  "collectionName": "maison_products",
+  "info": { "singularName": "product", "pluralName": "products", "displayName": "Maison product", "description": "A piece in the house's catalog." },
+  "options": { "draftAndPublish": true },
+  "pluginOptions": { "i18n": { "localized": true }, "content-manager": { "visible": true }, "content-type-builder": { "visible": false } },
+  "attributes": {
+    "name": { "type": "string", "required": true, "pluginOptions": { "i18n": { "localized": true } } },
+    "slug": { "type": "uid", "targetField": "name", "required": true },
+    "sku": { "type": "string", "required": true, "pluginOptions": { "i18n": { "localized": false } } },
+    "category": { "type": "enumeration", "enum": ["trunk", "bag", "small-leather", "travel", "objet"], "required": true, "pluginOptions": { "i18n": { "localized": false } } },
+    "description": { "type": "blocks", "pluginOptions": { "i18n": { "localized": true } } },
+    "craftStory": { "type": "text", "pluginOptions": { "i18n": { "localized": true } } },
+    "priceJpy": { "type": "integer", "required": true, "min": 0, "pluginOptions": { "i18n": { "localized": false } } },
+    "images": { "type": "media", "multiple": true, "allowedTypes": ["images"], "pluginOptions": { "i18n": { "localized": false } } },
+    "widthCm": { "type": "decimal", "pluginOptions": { "i18n": { "localized": false } } },
+    "heightCm": { "type": "decimal", "pluginOptions": { "i18n": { "localized": false } } },
+    "depthCm": { "type": "decimal", "pluginOptions": { "i18n": { "localized": false } } },
+    "personalizable": { "type": "boolean", "default": false, "pluginOptions": { "i18n": { "localized": false } } },
+    "personalizationKinds": { "type": "json", "pluginOptions": { "i18n": { "localized": false } } },
+    "personalizationLeadDays": { "type": "integer", "min": 0, "pluginOptions": { "i18n": { "localized": false } } },
+    "giftOccasions": { "type": "json", "pluginOptions": { "i18n": { "localized": false } } },
+    "collection": { "type": "relation", "relation": "manyToOne", "target": "plugin::maison.collection", "inversedBy": "products" },
+    "appointments": { "type": "relation", "relation": "manyToMany", "target": "plugin::maison.appointment", "mappedBy": "products" }
+  }
+}

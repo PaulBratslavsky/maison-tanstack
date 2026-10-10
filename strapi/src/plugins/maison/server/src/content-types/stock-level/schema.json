@@ -1,0 +1,12 @@
+{
+  "kind": "collectionType",
+  "collectionName": "maison_stock_levels",
+  "info": { "singularName": "stock-level", "pluralName": "stock-levels", "displayName": "Maison stock level", "description": "How many of a product a boutique holds, keyed by the two slugs." },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": { "content-manager": { "visible": true }, "content-type-builder": { "visible": false } },
+  "attributes": {
+    "productSlug": { "type": "string", "required": true },
+    "boutiqueSlug": { "type": "string", "required": true },
+    "quantity": { "type": "integer", "required": true, "min": 0, "default": 0 }
+  }
+}

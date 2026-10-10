@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "maison_inquiries",
+  "info": {
+    "singularName": "inquiry",
+    "pluralName": "inquiries",
+    "displayName": "Maison inquiry",
+    "description": "One concierge turn: what the customer asked, what the concierge answered, and the labels staff work from."
+  },
+  "options": { "draftAndPublish": false },
+  "pluginOptions": { "content-manager": { "visible": false }, "content-type-builder": { "visible": false } },
+  "config": { "attributes": { "customer": { "hidden": true } } },
+  "attributes": {
+    "customer": { "type": "string", "required": true, "private": true, "visible": false, "searchable": false },
+    "message": { "type": "text", "required": true, "maxLength": 1000 },
+    "reply": { "type": "text", "maxLength": 2000 },
+    "language": { "type": "enumeration", "enum": ["ja", "en"], "default": "ja" },
+    "knowledgeFound": { "type": "boolean", "default": false },
+    "handedOff": { "type": "boolean", "default": false },
+    "questionReference": { "type": "string" },
+    "productSlug": { "type": "string" },
+    "via": { "type": "enumeration", "enum": ["concierge", "line-chat"], "default": "concierge" },
+    "kind": { "type": "enumeration", "enum": ["question", "complaint", "praise", "other"] },
+    "sentimentScore": { "type": "float" },
+    "sentimentLabel": { "type": "enumeration", "enum": ["positive", "neutral", "negative"] },
+    "answered": { "type": "boolean" },
+    "reason": { "type": "text", "maxLength": 400 },
+    "topic": { "type": "string", "maxLength": 80 },
+    "analysisStatus": { "type": "enumeration", "enum": ["pending", "analyzed", "failed", "skipped"], "default": "pending" },
+    "analysisAttempts": { "type": "integer", "default": 0 },
+    "modelVersion": { "type": "string" },
+    "promptVersion": { "type": "string" },
+    "humanCorrected": { "type": "boolean", "default": false },
+    "queue": { "type": "enumeration", "enum": ["needs-answer", "complaint", "praise", "none"], "default": "none" },
+    "status": { "type": "enumeration", "enum": ["open", "replied", "closed"], "default": "open" },
+    "closeReason": { "type": "enumeration", "enum": ["answered-elsewhere", "not-needed", "spam"] },
+    "replyText": { "type": "text", "maxLength": 2000 },
+    "repliedAt": { "type": "datetime" },
+    "repliedBy": { "type": "string", "maxLength": 100 },
+    "lineOutcome": { "type": "enumeration", "enum": ["sent", "failed", "demo"] },
+    "lineDetail": { "type": "text", "maxLength": 500 }
+  }
+}
