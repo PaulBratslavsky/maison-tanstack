@@ -438,10 +438,12 @@ describe('what labelling sends to Ollama', () => {
     expect((await labelled({ ...OLLAMA_ON, aiModel: 'llama3.1' })).request.body.model).toBe('llama3.1');
   });
 
-  it('sends no Authorization header without a key, and a bearer token with one', async () => {
+  it('sends no Authorization header, with a key or without: the key is the Anthropic key, and Ollama never gets it', async () => {
     expect((await labelled()).request.headers).not.toHaveProperty('authorization');
 
     sent.length = 0;
-    expect((await labelled({ ...OLLAMA_ON, aiApiKey: KEY })).request.headers.authorization).toBe(`Bearer ${KEY}`);
+    const { request } = await labelled({ ...OLLAMA_ON, aiApiKey: KEY });
+    expect(request.headers).not.toHaveProperty('authorization');
+    expect(JSON.stringify(request)).not.toContain(KEY);
   });
 });

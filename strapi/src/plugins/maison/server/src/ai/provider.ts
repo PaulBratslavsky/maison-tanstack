@@ -67,6 +67,6 @@ export const adapterFor = async (settings: AiSettings): Promise<ChatAdapter> => 
       return createAnthropicAdapter(model, settings.aiApiKey);
     case 'ollama':
       if (!settings.aiBaseUrl) throw new Error("aiProvider 'ollama' needs aiBaseUrl (e.g. http://127.0.0.1:11434)");
-      return createOllamaAdapter(model, settings.aiBaseUrl, settings.aiApiKey || null);
+      return createOllamaAdapter(model, settings.aiBaseUrl);
   }
 };

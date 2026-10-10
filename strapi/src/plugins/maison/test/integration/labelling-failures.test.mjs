@@ -5,7 +5,7 @@ import { after, before, describe, it } from 'node:test';
 import { SUBJECT_A, bootStrapi } from './harness.mjs';
 
 const INQUIRY = 'plugin::maison.inquiry';
-/** A key for Ollama, which a hosted Ollama may want. It must never reach a log. */
+/** A key that is set while Ollama is the provider. It must never reach Ollama or a log. */
 const KEY = 'ollama-test-key-0123456789';
 const LABELS = {
   kind: 'complaint',
@@ -104,8 +104,8 @@ describe('inquiry labelling, when the model fails', () => {
     assert.match(warnings[0], /\[maison\] Labelling stopped until the next sweep\. The AI provider refused the key or the setup: .*model 'stand-in' not found/);
   });
 
-  it('sends the key as a bearer token, and no warning carries it', async () => {
-    assert.equal(model.requests[0].authorization, `Bearer ${KEY}`);
+  it('sends the key to Ollama in no header, and no warning carries it', async () => {
+    assert.equal(model.requests[0].authorization, undefined);
     assert.equal(warnings.join('\n').includes(KEY), false);
   });
 

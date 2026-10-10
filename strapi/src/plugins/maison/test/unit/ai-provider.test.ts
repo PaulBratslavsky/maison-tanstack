@@ -73,7 +73,7 @@ describe('adapterFor', () => {
     expect(adapter.model).toBe('qwen3-14b-32k');
   });
 
-  it('makes the Ollama adapter with a key too, which a hosted Ollama may want', async () => {
+  it('makes the Ollama adapter when a key is set too, and does not use the key', async () => {
     expect((await adapterFor(settings({ aiProvider: 'ollama', aiBaseUrl: 'https://ollama.example.test', aiApiKey: KEY }))).name).toBe('ollama');
   });
 

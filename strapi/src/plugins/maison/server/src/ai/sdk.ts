@@ -60,13 +60,16 @@ export const createAnthropicAdapter = async (model: string, apiKey: string): Pro
   return anthropic.createAnthropicChat(model as AnthropicListedModel, apiKey) as unknown as ChatAdapter;
 };
 
-/** The Ollama chat adapter for a model at a host. A key, when there is one, goes out as a bearer token, for a hosted Ollama. */
-export const createOllamaAdapter = async (model: string, host: string, apiKey: string | null): Promise<ChatAdapter> => {
+/**
+ * The Ollama chat adapter for a model at a host. It takes no key: `aiApiKey` is the Anthropic key, and it must not go to
+ * an Ollama host, a hosted one included.
+ */
+export const createOllamaAdapter = async (model: string, host: string): Promise<ChatAdapter> => {
   let ollama: typeof import('@tanstack/ai-ollama');
   try {
     ollama = await import('@tanstack/ai-ollama');
   } catch (error) {
     throw notLoaded('@tanstack/ai-ollama', error);
   }
-  return ollama.createOllamaChat(model, apiKey ? { host, headers: { Authorization: `Bearer ${apiKey}` } } : host) as unknown as ChatAdapter;
+  return ollama.createOllamaChat(model, host) as unknown as ChatAdapter;
 };
