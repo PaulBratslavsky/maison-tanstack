@@ -8,10 +8,12 @@
   },
   "scripts": {
     "postinstall": "npm install --prefix strapi && npm install --prefix app && node scripts/init-env.mjs",
-    "dev": "concurrently -k -n strapi,app -c magenta,green \"npm run develop --prefix strapi\" \"npm run dev --prefix app\"",
+    "dev": "concurrently -k -n strapi,app,line-verify -c magenta,green,cyan \"npm run develop --prefix strapi\" \"npm run dev --prefix app\" \"node --env-file-if-exists=app/.env scripts/mock-line-verify.mjs\"",
     "dev:strapi": "npm run develop --prefix strapi",
     "dev:app": "npm run dev --prefix app",
-    "test": "npm test --prefix app && node --test scripts/*.test.mjs"
+    "setup": "node --env-file=strapi/.env strapi/scripts/maison-setup.mjs",
+    "test": "npm test --prefix app && npm test --prefix strapi/src/plugins/maison && node strapi/scripts/share-strapi-utils.mjs --check && node --test scripts/*.test.mjs",
+    "test:integration": "npm run test:integration --prefix strapi/src/plugins/maison"
   },
   "devDependencies": {
     "concurrently": "^9.2.5"
