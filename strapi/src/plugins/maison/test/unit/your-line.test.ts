@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { UID } from '../../server/src/constants';
+import { staffAppointmentOutput } from '../../server/src/mcp/schemas';
 import appointments from '../../server/src/services/appointments';
 import questions from '../../server/src/services/questions';
 import { COMPLAINT, HANDED_OFF, PENDING, row, world } from './fake-inquiries';
@@ -96,6 +97,29 @@ describe('appointments: yourLine on the board rows and the summary', () => {
       expect(JSON.stringify(answer)).not.toMatch(/U[0-9a-f]{32}/);
       expect(JSON.stringify(answer)).not.toContain('demoLineUserId');
     }
+  });
+});
+
+describe('the MCP output schema of a staff appointment: yourLine', () => {
+  const view = {
+    reference: 'APT-4821', status: 'requested', customer: 'line:U5ca…1e', boutique: null, requestedFor: '2030-01-12T14:00:00+09:00',
+    products: [], note: '', createdVia: 'app', confirmationSent: false, demoCustomer: false, createdAt: '2026-10-01T09:00:00+09:00',
+  };
+
+  it.each([true, false])('accepts yourLine %s and keeps it in the answer', (yourLine) => {
+    expect(staffAppointmentOutput.parse({ ...view, yourLine }).yourLine).toBe(yourLine);
+  });
+
+  it('requires yourLine to be a boolean, like demoCustomer, so a view that lacks it is caught', () => {
+    expect(staffAppointmentOutput.safeParse(view).success).toBe(false);
+    expect(staffAppointmentOutput.safeParse({ ...view, yourLine: 'yes' }).success).toBe(false);
+    expect(staffAppointmentOutput.safeParse({ ...view, yourLine: null }).success).toBe(false);
+  });
+
+  it('describes yourLine in plain words, for a person or a model, without any LINE user ID', () => {
+    const description = staffAppointmentOutput.shape.yourLine.description ?? '';
+    expect(description).toMatch(/own LINE account/i);
+    expect(description).not.toMatch(/U[0-9a-f]{32}/);
   });
 });
 

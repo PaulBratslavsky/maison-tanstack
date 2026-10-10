@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { UID } from '../../server/src/constants';
+import { recordConfirmationTool } from '../../server/src/mcp/tools/record-confirmation';
 import confirmations from '../../server/src/services/confirmations';
 import { fakeStrapi } from './fake-strapi';
 
@@ -32,5 +33,11 @@ describe('confirmations.record: who recorded the outcome', () => {
     const { service, create } = setup();
     await service.record({ reference: 'APT-4821', status: 'failed', detail: 'not reachable: not a friend or blocked' });
     expect(create.mock.calls[0][0].data).toMatchObject({ outcome: 'failed', recordedBy: 'ops-agent' });
+  });
+
+  it("can't be named through record_confirmation, whose input drops it", () => {
+    const input = recordConfirmationTool.resolveInputSchema!({ userAbility: {} as any, user: { id: 1 } });
+    const args = input.parse({ reference: 'APT-4821', status: 'sent', detail: 'ok', recordedBy: 'strapi' });
+    expect(args).toEqual({ reference: 'APT-4821', status: 'sent', detail: 'ok' });
   });
 });

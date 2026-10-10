@@ -1,10 +1,11 @@
 import type { Core } from '@strapi/strapi';
 
 import { registerDocumentMiddleware } from './document-middleware';
+import { registerMcp } from './mcp';
 
-// The MCP tools are registered here too, once a later task adds them.
 const register = ({ strapi }: { strapi: Core.Strapi }) => {
   registerDocumentMiddleware(strapi);
+  registerMcp(strapi);
 };
 
 export default register;
