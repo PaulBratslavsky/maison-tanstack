@@ -76,7 +76,7 @@ describe('the LINE settings', () => {
 });
 
 describe('the AI settings', () => {
-  it("are Pulse's, with anthropic as the provider and nothing else set: labelling is off until a key is", () => {
+  it("have anthropic as the provider and nothing else set, so labelling is off until a key is set", () => {
     expect(defaultConfig.aiProvider).toBe('anthropic');
     expect(defaultConfig.aiModel).toBeNull();
     expect(defaultConfig.aiApiKey).toBeNull();

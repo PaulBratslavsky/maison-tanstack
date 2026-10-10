@@ -30,7 +30,7 @@ const jobOf = (strapi: Awaited<ReturnType<typeof bootstrapped>>) => {
 };
 
 describe('the labelling cron job', () => {
-  it(`is the one job bootstrap registers, named ${JOB}, and runs every minute, as Pulse's analysisSweep does`, async () => {
+  it(`is the one job bootstrap registers, named ${JOB}, and it runs every minute`, async () => {
     const strapi = await bootstrapped({ sweep: vi.fn() });
 
     expect(Object.keys(strapi.cron.add.mock.calls[0][0])).toEqual([JOB]);
