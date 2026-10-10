@@ -1,4 +1,5 @@
 import { useForm, useStore } from '@tanstack/react-form';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 
 import { bookingDays, bookingState, hasStock, isBookableDate, requestVisit, type VisitChoice } from '../lib/booking';
@@ -122,7 +123,12 @@ export function BookingForm({
   const { maison, locale } = useMaison();
   const t = COPY[locale];
   const now = useToday();
+  const queryClient = useQueryClient();
   const [sending, setSending] = useState(false);
+  // Set the moment a submit starts, before TanStack Form's own checks run: `sending` is state, and a second submit a few
+  // milliseconds after the first would still see it off. Held on after a booking, as `sending` is.
+  const inFlight = useRef(false);
+  const booked = useRef(false);
   const [problem, setProblem] = useState<ScreenError | null>(null);
   const boutiqueLabel = useId();
 
@@ -130,7 +136,7 @@ export function BookingForm({
   const form = useForm({
     defaultValues: { boutique: initial.boutique, date: initial.date, time: initial.time, note: '' },
     onSubmit: async ({ value }) => {
-      if (sending || disabled) return;
+      if (disabled) return;
       if (!maison || !chosen || !startTime) return;
       setSending(true);
       setProblem(null);
@@ -146,6 +152,9 @@ export function BookingForm({
       });
       if (outcome.ok) {
         // `sending` stays on: the button stays disabled while the caller moves on.
+        booked.current = true;
+        // My visits asks again, whoever booked (the sheet, the concierge's picker): its list is never from before this booking.
+        queryClient.removeQueries({ queryKey: ['tool', 'visits'] });
         onBooked(outcome.appointment);
         return;
       }
@@ -180,7 +189,12 @@ export function BookingForm({
   const submit = (event: FormEvent) => {
     event.preventDefault();
     event.stopPropagation();
-    void form.handleSubmit();
+    if (inFlight.current || disabled) return;
+    inFlight.current = true;
+    // Free again unless a visit was stored: a refusal, a failure or an unsent form may be tried again.
+    void form.handleSubmit().finally(() => {
+      if (!booked.current) inFlight.current = false;
+    });
   };
 
   return (

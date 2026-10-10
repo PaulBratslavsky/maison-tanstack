@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
 
@@ -18,7 +17,6 @@ export function BookingSheet({ product, onClose }: { product: Product; onClose: 
   const { locale } = useMaison();
   const t = COPY[locale];
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   // The sheet's own start: Ginza, the next Saturday at least two days away, at 14:00.
   const [initial] = useState(() => defaultVisit());
   const heading = useRef<HTMLHeadingElement>(null);
@@ -56,8 +54,6 @@ export function BookingSheet({ product, onClose }: { product: Product; onClose: 
         initial={initial}
         // `sending` stays on in the form: its button stays disabled while the app moves to the visits screen.
         onBooked={(appointment) => {
-          // My visits asks again, so its list is never from before this booking.
-          queryClient.removeQueries({ queryKey: ['tool', 'visits'] });
           void navigate({ to: '/visits', search: { ref: appointment.reference } });
         }}
         className="flex max-h-[90%] w-full flex-col gap-[18px] overflow-y-auto bg-paper px-[calc(1.25rem+var(--line-safe-x))] pb-[calc(1.25rem+var(--line-safe-bottom))] pt-2.5"
