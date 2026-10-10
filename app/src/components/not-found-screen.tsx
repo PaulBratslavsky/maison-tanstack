@@ -6,7 +6,8 @@ import { useMaison } from './maison-provider';
 
 /**
  * An address the app has no screen for (the root route's notFoundComponent): the header, a plain note in the customer's
- * language, and a link back to the start. It signs nobody in and calls no tool, so it has no tools line or agent view.
+ * language, and a link back to the start. It calls no tool, so it has no tools line or agent view. The root route's
+ * MaisonProvider wraps every path, this one too, so the customer is signed in here as on any other screen.
  */
 export function NotFoundScreen() {
   const { locale } = useMaison();
