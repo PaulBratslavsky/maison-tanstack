@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { INQUIRY_QUEUES } from '../../server/src/constants';
 import { inquiryReplyText, suggestedReply } from '../../server/src/domain/inquiry-replies';
 import { quoteOf } from '../../server/src/domain/question-messages';
+import { replyInquiryInput } from '../../server/src/mcp/schemas';
 
 const COMPLAINT_EN = "We're sorry about this, and thank you for telling us. A member of our team will look into it and reply in this chat with the next step.";
 const COMPLAINT_JA = 'ご不便をおかけし、申し訳ございません。お知らせいただき、ありがとうございます。担当者が確認し、こちらのトークで今後のご案内をいたします。';
@@ -29,7 +30,14 @@ describe('suggestedReply', () => {
     expect(INQUIRY_QUEUES.filter((queue) => suggestedReply(queue, 'ja') !== null)).toEqual(['complaint', 'praise']);
   });
 
-  // The test that the reply tool's input schema takes each suggested text comes back with the MCP schemas (task 2.7).
+  it('gives a text staff can send as it is: the reply form takes it, as it takes any reply', () => {
+    for (const queue of ['complaint', 'praise'] as const) {
+      for (const language of ['en', 'ja'] as const) {
+        const text = suggestedReply(queue, language) as string;
+        expect(replyInquiryInput.safeParse({ text }).data).toEqual({ text });
+      }
+    }
+  });
 });
 
 describe('inquiryReplyText', () => {
