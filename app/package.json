@@ -14,7 +14,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "typecheck:e2e": "tsc --noEmit -p tsconfig.e2e.json",
-    "test:e2e": "node --env-file=../strapi/.env --env-file=.env node_modules/@playwright/test/cli.js test"
+    "test:e2e": "node --env-file=../strapi/.env --env-file=.env node_modules/@playwright/test/cli.js test",
+    "typecheck:live": "tsc --noEmit -p tsconfig.live.json",
+    "test:live": "node --env-file=../strapi/.env --env-file=.env node_modules/vitest/vitest.mjs run --config vitest.live.config.ts",
+    "test:live:claude": "LIVE_MODEL=claude npm run test:live"
   },
   "dependencies": {
     "@fontsource/jost": "^5.3.0",
