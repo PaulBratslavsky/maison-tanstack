@@ -230,6 +230,13 @@ test('Not now closes the picker without a request, and the concierge answers onc
   await expect(page.getByRole('button', { name: /Can I book a visit\?/ })).toBeEnabled();
 });
 
+test('GET /api/concierge answers 405 with Allow: POST, not the page', async ({ request }) => {
+  const response = await request.get('/api/concierge');
+  expect(response.status()).toBe(405);
+  expect(response.headers()['allow']).toBe('POST');
+  expect(await response.json()).toEqual({ error: 'Use POST.' });
+});
+
 test.describe('a phone in landscape', () => {
   test.use({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true });
 
