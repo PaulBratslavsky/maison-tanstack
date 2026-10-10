@@ -1,0 +1,97 @@
+import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { EventType, type StreamChunk } from '@tanstack/ai';
+import { z } from 'zod';
+
+/**
+ * Helpers for the concierge's tests. Nothing here calls a provider or Strapi: the model is a script, and Strapi is an
+ * MCP server in the same process. Not imported by the app.
+ */
+
+/** What the model does in one call: words, tool calls, or nothing. */
+export type Step = { words?: string; calls?: Array<{ id: string; name: string; input: unknown }> };
+
+/** A text adapter that plays `steps`, one for each model call, as Claude's adapter would stream them. */
+export const scriptedModel = (steps: Step[]) => {
+  let index = 0;
+  const requests: Array<{ messages: unknown[]; tools: Array<{ name: string }> }> = [];
+  const adapter = {
+    kind: 'text',
+    name: 'scripted',
+    model: 'scripted-model',
+    '~types': {},
+    async *chatStream(options: { runId?: string; threadId?: string; messages: unknown[]; tools?: Array<{ name: string }> }): AsyncIterable<StreamChunk> {
+      requests.push({ messages: options.messages, tools: options.tools ?? [] });
+      const step = steps[index++] ?? {};
+      const runId = options.runId ?? `run-${index}`;
+      const threadId = options.threadId ?? 'thread-1';
+      yield { type: EventType.RUN_STARTED, runId, threadId, timestamp: Date.now() } as StreamChunk;
+      if (step.words) {
+        const messageId = `message-${index}`;
+        yield { type: EventType.TEXT_MESSAGE_START, messageId, role: 'assistant', timestamp: Date.now() } as StreamChunk;
+        yield { type: EventType.TEXT_MESSAGE_CONTENT, messageId, delta: step.words, timestamp: Date.now() } as StreamChunk;
+        yield { type: EventType.TEXT_MESSAGE_END, messageId, timestamp: Date.now() } as StreamChunk;
+      }
+      for (const [place, { id, name, input }] of (step.calls ?? []).entries()) {
+        const args = JSON.stringify(input);
+        yield { type: EventType.TOOL_CALL_START, toolCallId: id, toolCallName: name, toolName: name, index: place, timestamp: Date.now() } as StreamChunk;
+        yield { type: EventType.TOOL_CALL_ARGS, toolCallId: id, delta: args, args, timestamp: Date.now() } as StreamChunk;
+        yield { type: EventType.TOOL_CALL_END, toolCallId: id, toolCallName: name, toolName: name, input, timestamp: Date.now() } as StreamChunk;
+      }
+      yield { type: EventType.RUN_FINISHED, runId, threadId, finishReason: step.calls?.length ? 'tool_calls' : 'stop', timestamp: Date.now() } as StreamChunk;
+    },
+    structuredOutput: async () => {
+      throw new Error('Not used.');
+    },
+  };
+  return { adapter, requests, modelCalls: () => index };
+};
+
+/** A Maison tool's answer: its data as text and as structured content, as Strapi's tools give it. */
+export const answer = (data: Record<string, unknown>): CallToolResult => ({ content: [{ type: 'text', text: JSON.stringify(data) }], structuredContent: data });
+
+/** A Maison tool's refusal: `{ error: { code, message, hint } }` as text, with isError, as Strapi's tools give it. */
+export const refusal = (code: string, message: string, hint = ''): CallToolResult => ({
+  content: [{ type: 'text', text: JSON.stringify({ error: { code, message, hint } }) }],
+  isError: true,
+});
+
+type Args = Record<string, unknown>;
+export type Handler = (args: Args, extra: { signal: AbortSignal }) => CallToolResult | Promise<CallToolResult>;
+
+const locale = z.enum(['ja', 'en']).optional();
+
+/** The tools of a customer's session, with the input schemas Strapi gives them (the ones the concierge reads are exact). */
+const SCHEMAS: Record<string, z.ZodRawShape> = {
+  browse_collections: { locale },
+  search_products: { query: z.string().optional(), locale },
+  view_product: { slug: z.string(), locale },
+  find_boutiques: { productSlugs: z.array(z.string()).optional(), date: z.string().optional(), locale },
+  search_knowledge: { query: z.string(), productSlugs: z.array(z.string()).optional(), locale },
+  my_appointments: { locale },
+  hand_off_to_staff: { question: z.string(), reason: z.enum(['no_answer', 'asked_for_person']), productSlug: z.string().optional(), locale },
+  request_appointment: { boutique: z.string(), productSlugs: z.array(z.string()), requestedFor: z.string(), locale },
+  log_inquiry: { message: z.string(), reply: z.string(), knowledgeFound: z.boolean(), handedOff: z.boolean(), locale },
+};
+
+/**
+ * Strapi's MCP server for a test, in memory. `handlers` answer by tool name: a tool with none answers `{}`. `calls` keeps
+ * each call's tool and arguments in order. `tools` limits which tools are registered (all of a customer's by default).
+ */
+export const fakeStrapi = async ({ handlers = {}, tools = Object.keys(SCHEMAS) }: { handlers?: Record<string, Handler>; tools?: string[] } = {}) => {
+  const server = new McpServer({ name: 'fake-strapi', version: '1.0.0' });
+  const calls: Array<{ name: string; args: Args }> = [];
+  for (const name of tools) {
+    server.registerTool(name, { description: `The ${name} tool.`, inputSchema: SCHEMAS[name] }, async (args: Args, extra) => {
+      calls.push({ name, args });
+      return (await handlers[name]?.(args, { signal: extra.signal })) ?? answer({});
+    });
+  }
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  await server.connect(serverTransport);
+  return { server, clientTransport, calls, close: () => server.close() };
+};
+
+/** What `chat()` gives a tool's execute function, for a test that calls one by hand. */
+export const toolContext = (abortSignal?: AbortSignal) => ({ toolCallId: 'test-call', abortSignal, emitCustomEvent: () => {} });
