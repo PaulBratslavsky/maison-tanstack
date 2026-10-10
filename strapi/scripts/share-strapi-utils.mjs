@@ -23,13 +23,10 @@ if (!process.argv.includes('--check') && existsSync(ownCopy)) {
 const fromApp = createRequire(join(app, 'package.json'));
 const utilsFrom = (packageJson) => createRequire(packageJson).resolve('@strapi/utils');
 const core = utilsFrom(fromApp.resolve('@strapi/core/package.json'));
-const plugins = { maison: utilsFrom(join(maison, 'package.json')) };
-// The OAuth plugin is added to this app by a later task. Once it is installed, it is checked too.
-try {
-  plugins['strapi-oauth-mcp-manager'] = utilsFrom(fromApp.resolve('strapi-oauth-mcp-manager/package.json'));
-} catch (error) {
-  if (error.code !== 'MODULE_NOT_FOUND') throw error;
-}
+const plugins = {
+  maison: utilsFrom(join(maison, 'package.json')),
+  'strapi-oauth-mcp-manager': utilsFrom(fromApp.resolve('strapi-oauth-mcp-manager/package.json')),
+};
 const apart = Object.entries(plugins).filter(([, file]) => file !== core);
 if (apart.length > 0) {
   for (const [name, file] of apart) console.error(`${name} loads ${relative(app, file)}, not core's ${relative(app, core)}.`);
