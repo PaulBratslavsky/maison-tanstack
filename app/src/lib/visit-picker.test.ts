@@ -14,6 +14,7 @@ import {
   piecesOf,
   pickerPrefill,
   pickerViewOf,
+  pickerWaitingOf,
   requestedVisitOf,
   visitPickerOutputOf,
   type PickerMessage,
@@ -309,6 +310,33 @@ describe('composerLocked', () => {
     expect(composerLocked(true, false)).toBe(true);
     expect(composerLocked(false, true)).toBe(true);
     expect(composerLocked(true, true)).toBe(true);
+  });
+
+  it("holds the composer while a picker waits for its answer: ChatClient refuses a message then", () => {
+    expect(composerLocked(false, false, true)).toBe(true);
+    expect(composerLocked(false, false, false)).toBe(false);
+  });
+});
+
+describe('pickerWaitingOf', () => {
+  it("is true while the newest message's picker has come in whole and waits for the customer", () => {
+    expect(pickerWaitingOf([user('Can we schedule one?'), concierge(words('Here it is.'), waiting)])).toBe(true);
+  });
+
+  it('is false with no picker, or one that has its answer', () => {
+    expect(pickerWaitingOf([])).toBe(false);
+    expect(pickerWaitingOf([user('Hello'), concierge(words('Good afternoon.'))])).toBe(false);
+    expect(pickerWaitingOf([user('Can we schedule one?'), concierge(requested)])).toBe(false);
+    expect(pickerWaitingOf([user('Can we schedule one?'), concierge(closed)])).toBe(false);
+  });
+
+  it('is false for a picker still coming in: a reply is streaming then, and a cut-off call is no form to wait for', () => {
+    expect(pickerWaitingOf([user('Can we schedule one?'), concierge(picker('input-streaming'))])).toBe(false);
+    expect(pickerWaitingOf([user('Can we schedule one?'), concierge(picker('awaiting-input'))])).toBe(false);
+  });
+
+  it('is false for a picker in an older message, or one the customer moved past', () => {
+    expect(pickerWaitingOf([user('Can we schedule one?'), concierge(waiting), user('Which boutique has it?')])).toBe(false);
   });
 });
 

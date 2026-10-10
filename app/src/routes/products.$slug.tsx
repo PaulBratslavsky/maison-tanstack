@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { Link, createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 
 import { BookingSheet } from '../components/booking-sheet';
@@ -75,10 +75,9 @@ function ProductPage() {
             )}
             <Detail label={t.inStockAt}>{inStockAt.length > 0 ? listOf(inStockAt, locale) : t.outOfStock}</Detail>
           </Details>
-          {/* The concierge arrives in phase 4. Until its route exists, a plain link. */}
-          <a href={`/concierge?product=${item.slug}`} data-testid="ask-about-piece" className="btn-secondary mx-5 mt-[18px]">
+          <Link to="/concierge" search={{ product: item.slug }} data-testid="ask-about-piece" className="btn-secondary mx-5 mt-[18px]">
             {t.askAboutPiece}
-          </a>
+          </Link>
         </article>
       )}
       {booking && item && <BookingSheet product={item} onClose={() => setBooking(false)} />}

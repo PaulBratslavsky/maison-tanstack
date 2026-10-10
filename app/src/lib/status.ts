@@ -40,6 +40,23 @@ export const errorOf = (error: unknown): ScreenError => {
   return { code: error instanceof TypeError ? 'network' : 'error', message, hint: '' };
 };
 
+/** What the browsers say when a fetch can't reach its server: Chrome, Safari and Firefox. */
+const FETCH_FAILED = /^(Failed to fetch|Load failed|NetworkError when attempting to fetch resource\.?)$/;
+
+/**
+ * A chat's error, as the concierge page shows it (errorOf's, with two more ways to a code). @tanstack/ai-client turns
+ * whatever its connection throws into a plain Error with the same message (a RUN_ERROR), so the class that says "network"
+ * is gone: the browsers' own words for a failed fetch say it instead. It throws "HTTP error! status: 401 ..." when the
+ * route refuses the session, which the screens' copy names `not_signed_in`. A failure the model or the stream reports
+ * gets the generic copy: its words are for the technical line.
+ */
+export const chatErrorOf = (error: unknown): ScreenError => {
+  const found = errorOf(error);
+  if (found.code !== 'error') return found;
+  if (FETCH_FAILED.test(found.message)) return { ...found, code: 'network' };
+  return /\bstatus: 401\b/.test(found.message) ? { ...found, code: 'not_signed_in' } : found;
+};
+
 /**
  * An error in the customer's words. An unknown code, or a name Object inherits such as `constructor`, gets the generic
  * copy: nothing falls back to the raw message, which is in English and written for developers or agents. When the

@@ -26,10 +26,9 @@ export function HomeScreen({ text }: { text: Record<Locale, HomeText> }) {
         <p className="eyebrow">{home.eyebrow}</p>
         <h1 className="text-headline">{home.headline}</h1>
         {home.intro && <p className="whitespace-pre-line text-body text-graphite">{home.intro}</p>}
-        {/* The concierge arrives in phase 4. Until its route exists, a plain link. */}
-        <a href="/concierge" className="btn-primary mt-3">
+        <Link to="/concierge" className="btn-primary mt-3">
           {home.ctaLabel}
-        </a>
+        </Link>
       </section>
       <div className="flex items-baseline justify-between px-5 pb-3.5">
         <h2 className="label">{t.collections}</h2>

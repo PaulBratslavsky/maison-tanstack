@@ -1,7 +1,8 @@
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { EventType, type StreamChunk } from '@tanstack/ai';
+import { EventType, chat, maxIterations, type AnyClientTool, type AnyServerTool, type StreamChunk, type UIMessage } from '@tanstack/ai';
+import type { ConnectionAdapter } from '@tanstack/ai-client';
 import { z } from 'zod';
 
 /**
@@ -128,3 +129,32 @@ export const fakeStrapi = async ({ handlers = {}, tools = Object.keys(SCHEMAS) }
 
 /** What `chat()` gives a tool's execute function, for a test that calls one by hand. */
 export const toolContext = (abortSignal?: AbortSignal) => ({ toolCallId: 'test-call', abortSignal, emitCustomEvent: () => {} });
+
+/**
+ * A chat page's connection with the real server-side `chat()` behind it, in place of `fetchServerSentEvents` and
+ * `/api/concierge`: each request the page makes runs one turn of the scripted model, with `tools` as the route's tools
+ * (server tools run here; a client tool such as choose_visit ends the turn). `requests` keeps the messages each request
+ * carried. It stops a chat that sends again and again, after `limit` requests. The route's own rules (the extra pass,
+ * the log) are not here: handleConcierge has its own tests.
+ */
+export const chatConnection = (model: ReturnType<typeof scriptedModel>, tools: Array<AnyServerTool | AnyClientTool>, { limit = 8 }: { limit?: number } = {}) => {
+  const requests: UIMessage[][] = [];
+  const connection: ConnectionAdapter = {
+    connect: (messages, _data, abortSignal, runContext) => {
+      requests.push(structuredClone(messages as UIMessage[]));
+      if (requests.length > limit) throw new Error(`Stopped after ${limit} requests: the chat is sending again and again.`);
+      const abortController = new AbortController();
+      abortSignal?.addEventListener('abort', () => abortController.abort());
+      return chat({
+        adapter: model.adapter as never,
+        messages: messages as never,
+        tools,
+        agentLoopStrategy: maxIterations(8),
+        threadId: runContext?.threadId,
+        runId: runContext?.runId,
+        abortController,
+      }) as AsyncIterable<StreamChunk>;
+    },
+  };
+  return { connection, requests };
+};

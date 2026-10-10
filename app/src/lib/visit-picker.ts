@@ -162,10 +162,21 @@ export const pickerViewOf = (part: { state?: string; output?: unknown }, { live,
 };
 
 /**
- * Whether the customer must wait to send a message: while a reply comes in, and while a picker's request is on its way.
- * A message sent then would move past the picker, which would read "No request sent." over a visit being booked.
+ * Whether the newest message holds a picker that has come in whole and waits for the customer's answer: the one whose form
+ * the chat shows. @tanstack/ai-client refuses a new message while it waits (sendMessage throws), so the composer waits too.
+ * A picker still coming in is not this: a reply is streaming then, and `busy` already holds the composer.
  */
-export const composerLocked = (busy: boolean, pickerSending: boolean): boolean => busy || pickerSending;
+export const pickerWaitingOf = (messages: readonly PickerMessage[]): boolean => {
+  const id = livePickerOf(messages);
+  return id !== null && (messages.at(-1)?.parts ?? []).some((part) => part.id === id && isPickerAwaitingAnswer(part));
+};
+
+/**
+ * Whether the customer must wait to send a message: while a reply comes in, while a picker's request is on its way, and
+ * while a picker waits for its answer (`pickerWaiting`, from pickerWaitingOf). A message sent during the request would
+ * move past the picker, which would read "No request sent." over a visit being booked.
+ */
+export const composerLocked = (busy: boolean, pickerSending: boolean, pickerWaiting = false): boolean => busy || pickerSending || pickerWaiting;
 
 /**
  * Where the concierge page's follow-scroll goes when the conversation changes. `following`: the page follows the

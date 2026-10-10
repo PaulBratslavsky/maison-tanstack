@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { COPY } from './copy';
 import { SessionError } from './session';
-import { errorDetail, errorOf, errorText, leadsHome, requestSentFor, statusLabel, statusTag } from './status';
+import { chatErrorOf, errorDetail, errorOf, errorText, leadsHome, requestSentFor, statusLabel, statusTag } from './status';
 import type { Appointment } from './types';
 
 const visit = (overrides: Partial<Appointment> = {}): Appointment => ({
@@ -110,6 +110,25 @@ describe('tryAgainIn', () => {
     expect(COPY.en.tryAgainIn(90)).toBe("That's about 2 minutes.");
     expect(COPY.ja.tryAgainIn(5)).toBe('目安は5秒ほどです。');
     expect(COPY.ja.tryAgainIn(120)).toBe('目安は2分ほどです。');
+  });
+});
+
+describe('chatErrorOf', () => {
+  it("calls the route's refusal of a missing or old session not_signed_in, which has its own words", () => {
+    // What @tanstack/ai-client throws for a non-2xx answer (assertResponseOk in connection-adapters.js).
+    expect(chatErrorOf(new Error('HTTP error! status: 401 Unauthorized'))).toEqual({ code: 'not_signed_in', message: 'HTTP error! status: 401 Unauthorized', hint: '' });
+  });
+
+  it("calls a failed fetch network by its words too: the chat client turns the error into a plain Error with the message (RUN_ERROR)", () => {
+    for (const message of ['Failed to fetch', 'Load failed', 'NetworkError when attempting to fetch resource.']) {
+      expect(chatErrorOf(new Error(message)), message).toMatchObject({ code: 'network', message });
+    }
+  });
+
+  it("keeps the rest as errorOf has it: a failed fetch is network, a model failure is error, and any other status is error", () => {
+    expect(chatErrorOf(new TypeError('Failed to fetch'))).toMatchObject({ code: 'network' });
+    expect(chatErrorOf(new Error('Claude could not be reached.'))).toMatchObject({ code: 'error', message: 'Claude could not be reached.' });
+    expect(chatErrorOf(new Error('HTTP error! status: 502 Bad Gateway'))).toMatchObject({ code: 'error' });
   });
 });
 
