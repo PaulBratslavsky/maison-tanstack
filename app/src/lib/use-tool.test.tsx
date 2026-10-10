@@ -121,6 +121,15 @@ describe('useTool', () => {
     expect(callTool).toHaveBeenLastCalledWith('home', 'browse_collections', { date: '2026-10-18' });
   });
 
+  it("asks again after a language switch, even when the caller's args have no locale", async () => {
+    maisonState.value = { status: 'ready', maison: { callTool }, locale: 'en' } as typeof maisonState.value;
+    const { result, rerender } = render({ args: { slug: 'weekender-50' } });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    maisonState.value = { status: 'ready', maison: { callTool }, locale: 'ja' } as typeof maisonState.value;
+    rerender({ screen: 'home', name: 'browse_collections', args: { slug: 'weekender-50' } });
+    await waitFor(() => expect(callTool).toHaveBeenCalledTimes(2));
+  });
+
   it('keeps the last answer when the args turn null, and does not call', async () => {
     const { result, rerender } = render({ args: { date: '2026-10-17' } });
     await waitFor(() => expect(result.current.loading).toBe(false));

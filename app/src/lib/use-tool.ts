@@ -16,18 +16,18 @@ const KEEP_MS = 5_000;
  * Calls one Maison tool once the customer is signed in, and again whenever `args` change.
  * Pass `null` as args to wait. Returns the structured result, or the tool's error.
  *
- * It runs on TanStack Query. The key is ['tool', screen, name, args], so two readers of one call share it, and the
- * query runs once per mount: no retries, and no refetch on focus or reconnect, because every call is shown in the agent
- * view and a repeat the customer did not cause would be noise. Like the original hook, it keeps the last answer on
- * screen while a new one loads (the booking sheet's days), and a retry shows the spinner, not the error it retries.
- * A tool's refusal is an answer, so it is returned and not thrown: only a failure on the way (network, sign-in) is a
- * Query error.
+ * It runs on TanStack Query. The key is ['tool', screen, name, args, locale], so two readers of one call share it, a
+ * language switch asks again even when the caller's args have no locale, and the query runs once per mount: no
+ * retries, and no refetch on focus or reconnect, because every call is shown in the agent view and a repeat the
+ * customer did not cause would be noise. Like the original hook, it keeps the last answer on screen while a new one
+ * loads (the booking sheet's days), and a retry shows the spinner, not the error it retries. A tool's refusal is an
+ * answer, so it is returned and not thrown: only a failure on the way (network, sign-in) is a Query error.
  */
 export function useTool<T>(screen: string, name: string, args: Record<string, unknown> | null) {
-  const { status, maison } = useMaison();
+  const { status, maison, locale } = useMaison();
   const enabled = status === 'ready' && maison !== null && args !== null;
   const query = useQuery<CallToolResult>({
-    queryKey: ['tool', screen, name, args],
+    queryKey: ['tool', screen, name, args, locale],
     queryFn: () => maison!.callTool(screen, name, args!),
     enabled,
     retry: false,
