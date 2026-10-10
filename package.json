@@ -1,0 +1,19 @@
+{
+  "name": "maison-tanstack",
+  "version": "0.1.0",
+  "private": true,
+  "description": "From UX to AX: one set of Strapi MCP tools serving a LINE app, its concierge and staff. The customer app is TanStack Start, and every model call goes through TanStack AI.",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "postinstall": "npm install --prefix strapi && npm install --prefix app && node scripts/init-env.mjs",
+    "dev": "concurrently -k -n strapi,app -c magenta,green \"npm run develop --prefix strapi\" \"npm run dev --prefix app\"",
+    "dev:strapi": "npm run develop --prefix strapi",
+    "dev:app": "npm run dev --prefix app",
+    "test": "npm test --prefix app && node --test scripts/*.test.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.5"
+  }
+}
