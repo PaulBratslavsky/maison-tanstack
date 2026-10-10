@@ -143,8 +143,8 @@ Proxy server routes (`/mcp`, the token endpoint, `/uploads/$`), closed unless th
 
 README, `docs/{architecture,testing,production}.md` with deployment notes (deploy nothing), one whole-project review on the most capable model, one fix round.
 
-## Open questions for Paul
+## Decisions Paul made
 
-1. Keep our own MCP wrapper (the spec) or use `@tanstack/ai-mcp`? Recommended: our own, for the reason in section 0.
-2. On Ollama the extra pass cannot force `choose_visit`. Accept that (it still limits tools to the two), or drop the extra pass on Ollama? Recommended: accept it and log when no picker came back.
-3. Section 11 defaults, unless he says otherwise: new ports, Sonnet 5.5, no AI Gateway, Ollama in place of OpenAI, TanStack Form and Query, Tailwind v4, a not-found screen.
+1. 10 October: the concierge uses our own MCP wrapper on `@modelcontextprotocol/sdk` (option A). Strapi always uses its native MCP server.
+2. 10 October: the extra pass runs on Ollama too, with only the two tools offered.
+3. 10 October: the section 11 defaults stay. Each phase is merged into `main` when it ends.
