@@ -12,7 +12,9 @@
     "build": "vite build",
     "start": "vite preview --host 127.0.0.1 --port 3004 --strictPort",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck:e2e": "tsc --noEmit -p tsconfig.e2e.json",
+    "test:e2e": "node --env-file=../strapi/.env --env-file=.env node_modules/@playwright/test/cli.js test"
   },
   "dependencies": {
     "@fontsource/jost": "^5.3.0",
@@ -29,6 +31,7 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.0",
     "@tailwindcss/vite": "4.3.3",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
