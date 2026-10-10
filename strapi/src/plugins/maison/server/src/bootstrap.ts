@@ -39,7 +39,7 @@ const bootstrap = async ({ strapi }: { strapi: Core.Strapi }) => {
     strapi.log.warn('[maison] config.liffUrl is not set, so pending_confirmations will return not_configured.');
   }
 
-  // Labels inquiries every minute, as Pulse's analysisSweep does. With AI off, the sweep only marks new rows skipped.
+  // Labels inquiries every minute. With AI off, the sweep only marks new rows skipped.
   strapi.cron.add({
     'maison-label-inquiries': {
       task: async ({ strapi: app }) => {
