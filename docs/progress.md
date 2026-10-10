@@ -6,7 +6,8 @@ The next session starts here. Newest entries at the bottom of each section.
 
 - Phase 0 (plan): done. `docs/plan.md`.
 - Phase 1 (scaffold): done, reviewed by Sonnet, one fix round (init-env: duplicate keys, the placeholder match, line endings, `KEY: value`).
-- Phase 2 (Maison plugin, back end): in progress. 2A done (skeleton, 19 domain files, seed data, config validator; 534 unit tests). 2B done (10 content types, Home page, document middleware, integration harness, the `@strapi/utils` fix; 593 unit and 6 integration tests). 2C done (12 services, labelling stub, bootstrap cron and warnings; 1334 unit and 122 integration tests). Note: 2C copied most service tests and code from the original together, so only the new tests were seen failing before their code; the ported tests failed on missing modules. 2D done (strapi-oauth-mcp-manager 1.1.0, 13 MCP tools and the prompt on Strapi's native MCP server, 22 admin and 7 REST routes, 13 RBAC actions; 1983 unit and 163 integration tests). The new MCP integration test was written after its code; I checked it by switching off `registerMcp`: 10 of 12 failed, then all 12 passed again. 2E done (LINE verify mock on 4546, `npm run setup`, root `dev`, `setup`, `test`, `test:integration`). By hand: setup on the dev database made the demo admin (first admin), the catalog (3 collections, 12 products, 3 boutiques), the Public grants, two tokens and the "Maison app" client; a LINE token exchange for a demo customer answered 200, and that session listed only customer tools. Phase 2 review done (two Sonnet reviewers): no correctness bugs in the plugin; low findings in tests, scripts and config. Fix round running.
+- Phase 2 (Maison plugin, back end): done. Tasks 2A to 2E, two Sonnet reviews (no correctness bugs in the plugin), one fix round (two restored tests, the `@strapi/utils` check before every start and before the integration suites, init-env line endings and multi-line quoted values, trimmed LINE values), a short re-review. Checks: 2020 plugin unit tests, 163 integration tests, 58 script tests, both typechecks. Merged into `main`.
+- Phase 3 (customer app, screens): next.
 
 ## Rulings
 
@@ -51,6 +52,7 @@ Format: `Ruling: <what> - <why> - <cost if wrong>`.
 
 ## Log
 
+- 10 October 2026: phase 2 done and merged into `main`. The dev database now holds the demo admin, the catalog, the Public grants, the two tokens and the "Maison app" client; `app/.env` has `VITE_MAISON_CLIENT_ID`.
 - 10 October 2026: merged phase 1 into `main` (fast-forward to 19be520). Set the Anthropic key in the worktree. Phase 2 started.
 - 10 October 2026: phase 1. `init-env` with 16 tests (merges, never changes a set value, prints names only). Strapi 5.57 scaffold on SQLite, 1339, MCP on (`/mcp` answers 401 without a token), CORS for `http://localhost:3004`. TanStack Start app on 3004 with Tailwind v4, Vitest and a pin test. `npm install` at the root installs both and writes both `.env` files (mode 600). `npm run dev` starts both; checked `/_health` 204, `/admin` 200, the app 200, the CORS preflight.
 - 9 October 2026: read the handoff, spec and inventories; checked versions with `npm view`; read the installed TanStack AI 0.68.0 types in a scratch install; wrote `docs/plan.md`. Merged `main` (619c3e6, the handoff note about the Anthropic key) into this branch.
