@@ -34,11 +34,12 @@ export const DEFAULT_MODEL: Record<AiProvider, string> = {
 };
 
 /**
- * AI is optional. With a key, or with an Ollama host, a model labels inquiries. Without either, labelling is off, not
- * degraded: new inquiries are marked skipped and staff label them by hand. An empty key counts as none.
+ * AI is optional. Each provider needs its own setting: Anthropic needs `aiApiKey`, and Ollama needs `aiBaseUrl` whatever the
+ * key. Without it, labelling is off, not degraded: new inquiries are marked skipped and staff label them by hand. An empty
+ * value counts as none.
  */
 export const aiEnabled = (settings: Pick<AiSettings, 'aiProvider' | 'aiApiKey' | 'aiBaseUrl'>): boolean =>
-  Boolean(settings.aiApiKey) || (settings.aiProvider === 'ollama' && Boolean(settings.aiBaseUrl));
+  settings.aiProvider === 'ollama' ? Boolean(settings.aiBaseUrl) : Boolean(settings.aiApiKey);
 
 /** An empty AI_MODEL in an env file gives '', which means not set. */
 export const modelIdOf = (settings: AiSettings): string => settings.aiModel || DEFAULT_MODEL[settings.aiProvider];

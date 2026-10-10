@@ -23,6 +23,10 @@ describe('aiEnabled', () => {
     ['anthropic with only a host, which it does not use', { aiProvider: 'anthropic', aiApiKey: null, aiBaseUrl: HOST }, false],
     ['ollama with a host and no key', { aiProvider: 'ollama', aiApiKey: null, aiBaseUrl: HOST }, true],
     ['ollama with a host and a key', { aiProvider: 'ollama', aiApiKey: 'a-key', aiBaseUrl: 'https://ollama.example.test' }, true],
+    ['ollama with a key and no host, which labelling cannot reach', { aiProvider: 'ollama', aiApiKey: 'a-key', aiBaseUrl: null }, false],
+    ['ollama with a key and an empty host', { aiProvider: 'ollama', aiApiKey: 'a-key', aiBaseUrl: '' }, false],
+    ['anthropic with a host and no key', { aiProvider: 'anthropic', aiApiKey: null, aiBaseUrl: HOST }, false],
+    ['anthropic with a key and a host', { aiProvider: 'anthropic', aiApiKey: 'a-key', aiBaseUrl: HOST }, true],
     ['ollama with neither a host nor a key', { aiProvider: 'ollama', aiApiKey: null, aiBaseUrl: null }, false],
   ] as const)('is %s', (_what, fields, expected) => {
     expect(aiEnabled(settings(fields))).toBe(expected);
