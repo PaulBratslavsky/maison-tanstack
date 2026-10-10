@@ -6,7 +6,7 @@ The next session starts here. Newest entries at the bottom of each section.
 
 - Phase 0 (plan): done. `docs/plan.md`.
 - Phase 1 (scaffold): done, reviewed by Sonnet, one fix round (init-env: duplicate keys, the placeholder match, line endings, `KEY: value`).
-- Phase 2 (Maison plugin, back end): in progress. 2A done (skeleton, 19 domain files, seed data, config validator; 534 unit tests). 2B done (10 content types, Home page, document middleware, integration harness, the `@strapi/utils` fix; 593 unit and 6 integration tests). 2C running (services).
+- Phase 2 (Maison plugin, back end): in progress. 2A done (skeleton, 19 domain files, seed data, config validator; 534 unit tests). 2B done (10 content types, Home page, document middleware, integration harness, the `@strapi/utils` fix; 593 unit and 6 integration tests). 2C done (12 services, labelling stub, bootstrap cron and warnings; 1334 unit and 122 integration tests). Note: 2C copied most service tests and code from the original together, so only the new tests were seen failing before their code; the ported tests failed on missing modules. 2D running (MCP tools, routes, RBAC, oauth-mcp-manager).
 
 ## Rulings
 
@@ -31,6 +31,8 @@ Format: `Ruling: <what> - <why> - <cost if wrong>`.
 - Ruling: the LINE flex message writes a hyphen, not an em dash, in an empty field - the project bans em dashes in strings, and LINE only needs a non-empty text node - a small visual difference from the original confirmation.
 - Ruling: `aiBaseUrl` is the Ollama host and `aiProvider` is `anthropic` or `ollama` (task 2A) - spec section 8 replaces OpenAI with Ollama - none.
 - Ruling: Strapi 5.57 still needs the `@strapi/utils` sharing fix (`strapi/scripts/share-strapi-utils.mjs` at postinstall, `--check` before develop) - without it the plugin had its own copy, a document-middleware `ValidationError` was not core's, and the Content Manager answered 500; with it, 400 (`test/integration/validation-errors.test.mjs`) - a reinstall of the plugin alone, without the postinstall, brings the 500 back.
+- Ruling: the closed-hours hint reads "from 11:00 to 20:00", not an en dash range - the writing rules ban en dashes - none.
+- Ruling: the labelling service is a stub until phase 5: with AI off it marks pending inquiries `skipped`; with a key or an Ollama host it does nothing and logs once - labelling moves to TanStack AI in phase 5 - inquiries stay pending on a laptop with a key until then.
 - Ruling: `init-env` does not read multi-line quoted values - no `.env` here has one - a key inside such a value would count as present and not be added.
 
 ## Open with Paul
