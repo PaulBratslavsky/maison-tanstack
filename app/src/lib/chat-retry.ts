@@ -57,10 +57,16 @@ export const needsRetry = (messages: readonly ChatMessage[], busy: boolean): boo
   if (busy) return false;
   const last = messages.at(-1);
   if (last?.role !== 'assistant') return false;
-  if (last.parts.some(mayHaveBooked)) return false;
-  if (last.parts.some((part) => isPickerAwaitingAnswer(part) || requestedVisitOf(part) !== null)) return false;
-  const note = handOffAt(last.parts);
-  if (note && note.kind !== 'failed_hand_off') return false;
+  // reload() removes every message after the last user message, and the reply after a picker answer is a new assistant
+  // message with no user message before it. So each of those messages can hold what must not be asked for again.
+  const lastUser = messages.findLastIndex((message) => message.role === 'user');
+  const dropped = messages.slice(lastUser + 1).filter((message) => message.role === 'assistant');
+  for (const message of dropped) {
+    if (message.parts.some(mayHaveBooked)) return false;
+    if (message.parts.some((part) => isPickerAwaitingAnswer(part) || requestedVisitOf(part) !== null)) return false;
+    const note = handOffAt(message.parts);
+    if (note && note.kind !== 'failed_hand_off') return false;
+  }
   const end = last.parts.filter(shown).at(-1);
   return end?.type !== 'text';
 };

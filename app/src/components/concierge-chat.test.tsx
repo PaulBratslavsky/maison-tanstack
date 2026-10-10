@@ -355,6 +355,20 @@ describe('Try again', () => {
     // The reply after the answer was empty and made no message; the booking's own message ends in the card.
     expect(screen.queryByTestId('retry-reply')).toBeNull();
   });
+
+  it('is not offered when the reply after a booking is a new message of tool calls and no words: reload would drop the booking too', async () => {
+    const view = await askForVisit(mount([...toPicker, { calls: [{ id: 'c-after', name: 'search_products', input: { query: 'more' } }] }, {}]));
+    fireEvent.click(within(screen.getByTestId('visit-picker')).getByRole('button', { name: 'Send request' }));
+    await screen.findByRole('link', { name: /APT-0042/ });
+    // The call after the answer is in a message of its own, with no words in it.
+    await waitFor(() => expect(lines().filter((line) => line?.includes('search_products'))).toHaveLength(2));
+    await settle();
+    const last = screen.getAllByTestId('message-assistant').at(-1) as HTMLElement;
+    expect(within(last).queryByTestId('tool-chip')).not.toBeNull();
+    expect(last.querySelectorAll('p:not([data-testid="tool-chip"])')).toHaveLength(0);
+    expect(screen.queryByTestId('retry-reply')).toBeNull();
+    expect(view.requests).toHaveLength(2);
+  });
 });
 
 describe('errors', () => {

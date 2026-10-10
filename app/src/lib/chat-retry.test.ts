@@ -238,6 +238,30 @@ describe('needsRetry', () => {
       expect(needsRetry([...askedToVisit, assistant(closedPicker, settled, text('Happy to help with anything else.'))], false)).toBe(false);
     });
 
+    // ai-client's reload() removes every message after the last user message. A reply after a picker answer is a new
+    // assistant message with no user message between, so the booking sits in an earlier message than the last.
+    it('is false when the booking is in an earlier message after the last user message, and the last one has tool calls only', () => {
+      const bookedByPicker = assistant(text('Pick the details here.'), requestedVisit, booked);
+      expect(needsRetry([...askedToVisit, bookedByPicker, assistant(searchProducts)], false)).toBe(false);
+      expect(needsRetry([...askedToVisit, bookedByPicker, assistant(searchProducts, settled)], false)).toBe(false);
+      expect(needsRetry([...askedToVisit, assistant(booked), assistant(searchProducts)], false)).toBe(false);
+    });
+
+    it('is false when a picker waits, or a recorded hand-off answered, in an earlier message after the last user message', () => {
+      expect(needsRetry([...askedToVisit, assistant(picker('input-complete')), assistant(searchProducts)], false)).toBe(false);
+      expect(needsRetry([...askedToVisit, assistant(handedOff), assistant(searchProducts)], false)).toBe(false);
+    });
+
+    it('still allows it when only an earlier message holds a failed hand-off, a refused booking or a closed picker', () => {
+      expect(needsRetry([...askedToVisit, assistant(handOff('error')), assistant(searchProducts)], false)).toBe(true);
+      expect(needsRetry([...askedToVisit, assistant(refused), assistant(searchProducts)], false)).toBe(true);
+      expect(needsRetry([...askedToVisit, assistant(closedPicker), assistant(searchProducts)], false)).toBe(true);
+    });
+
+    it('ignores a booking from before the last user message', () => {
+      expect(needsRetry([...askedToVisit, assistant(requestedVisit, booked), user('Anything else?'), assistant(searchProducts)], false)).toBe(true);
+    });
+
     it('allows it on a later reply that is empty, when the visit was requested in an earlier one', () => {
       expect(needsRetry([...askedToVisit, assistant(requestedVisit, settled, text('Requested.')), user('Anything else for him?'), assistant(searchProducts)], false)).toBe(true);
     });
