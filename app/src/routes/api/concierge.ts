@@ -18,6 +18,8 @@ import { strapiOrigin } from '../../lib/strapi-origin'
 export const Route = createFileRoute('/api/concierge')({
   server: {
     handlers: {
+      // A stray GET gets 405, not the page renderer's 200.
+      GET: () => Response.json({ error: 'Use POST.' }, { status: 405, headers: { Allow: 'POST' } }),
       POST: ({ request }) => handleConcierge(request, { model: conciergeModel(process.env), strapiUrl: strapiOrigin(process.env) }),
     },
   },
