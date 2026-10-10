@@ -1,12 +1,13 @@
 import { vi } from 'vitest';
 import { UID } from '../../server/src/constants';
+import conversationsController from '../../server/src/controllers/conversations';
 import conversationsService from '../../server/src/services/conversations';
 import { matches } from './fake-filters';
 import { fakeStrapi } from './fake-strapi';
 
 /*
  * What the tests of the saved chats share: the Document Service as a small table for the conversation content type, a Koa context with
- * Strapi's error helpers, and the service wired over them.
+ * Strapi's error helpers, and the service and controller wired over them.
  */
 
 export type Doc = Record<string, any>;
@@ -104,11 +105,12 @@ export const fakeCtx = ({ admin = 7, params = {}, body }: { admin?: number | nul
   return ctx;
 };
 
-/** The saved chats' service over a table of rows. */
+/** The saved chats' service and controller over a table of rows. */
 export const chatsWorld = (initial: Doc[] = []) => {
   const table = fakeTable(initial);
   const services: Doc = {};
   const strapi = fakeStrapi({ services, documents: table.documents as never });
   services.conversations = conversationsService({ strapi });
-  return { ...table, strapi, service: services.conversations as ReturnType<typeof conversationsService> };
+  const controller = conversationsController({ strapi });
+  return { ...table, strapi, controller, service: services.conversations as ReturnType<typeof conversationsService> };
 };

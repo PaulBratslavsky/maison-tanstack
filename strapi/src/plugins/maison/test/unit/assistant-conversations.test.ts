@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { SAVED_CHATS, UID } from '../../server/src/constants';
+import { ACTION, SAVED_CHATS, UID } from '../../server/src/constants';
+import controllers from '../../server/src/controllers';
+import routes from '../../server/src/routes';
 import { cutTitle } from '../../server/src/services/conversations';
-import { CHAT, assistantMessage, chatsWorld, savedRow, staffMessage, type Doc } from './fake-conversations';
+import { CHAT, assistantMessage, chatsWorld, fakeCtx, savedRow, staffMessage, type Doc } from './fake-conversations';
+import { fakeStrapi } from './fake-strapi';
 
 const NO_CHAT = 'There is no saved chat with that ID.';
 const NOT_SAVED = 'This chat could not be saved.';
@@ -312,5 +315,148 @@ describe('the saved chats service', () => {
 
   it('works on the conversation content type, plugin::maison.conversation', () => {
     expect(UID.conversation).toBe('plugin::maison.conversation');
+  });
+});
+
+describe('the saved chats controller', () => {
+  it('lists the signed-in admin\'s chats as { conversations }', async () => {
+    const { controller } = chatsWorld([savedRow('c1', 7), savedRow('c2', 8)]);
+    const ctx = fakeCtx({ admin: 7 });
+    await controller.list(ctx);
+    expect(ctx.body).toEqual({ conversations: [{ documentId: 'c1', title: 'Which visits are waiting?', updatedAt: '2026-10-06T00:00:00.000Z' }] });
+  });
+
+  it('opens a chat as { conversation }, with its messages', async () => {
+    const { controller } = chatsWorld([savedRow('c1', 7)]);
+    const ctx = fakeCtx({ admin: 7, params: { documentId: 'c1' } });
+    await controller.findOne(ctx);
+    expect(ctx.body.conversation).toMatchObject({ documentId: 'c1', title: 'Which visits are waiting?', messages: CHAT });
+  });
+
+  it('saves a new chat with 201, the admin of the session, and the row without its messages', async () => {
+    const { controller, rows } = chatsWorld();
+    const ctx = fakeCtx({ admin: 7, body: { title: 'Which visits are waiting?', messages: CHAT, adminUserId: 99 } });
+    await controller.create(ctx);
+    expect(ctx.status).toBe(201);
+    expect(ctx.body).toEqual({ conversation: { documentId: 'chat-1', title: 'Which visits are waiting?', updatedAt: expect.any(String) } });
+    expect(rows.get('chat-1')?.adminUserId).toBe(7);
+  });
+
+  it('saves a chat again with 200', async () => {
+    const { controller, rows } = chatsWorld([savedRow('c1', 7)]);
+    const ctx = fakeCtx({ admin: 7, params: { documentId: 'c1' }, body: { messages: [...CHAT, staffMessage('u2', 'More')] } });
+    await controller.update(ctx);
+    expect(ctx.status).toBe(200);
+    expect(ctx.body.conversation.documentId).toBe('c1');
+    expect(rows.get('c1')?.messages.messages).toHaveLength(3);
+  });
+
+  it('deletes a chat and says which', async () => {
+    const { controller, rows } = chatsWorld([savedRow('c1', 7)]);
+    const ctx = fakeCtx({ admin: 7, params: { documentId: 'c1' } });
+    await controller.remove(ctx);
+    expect(ctx.body).toEqual({ documentId: 'c1' });
+    expect(rows.size).toBe(0);
+  });
+
+  describe("another admin's chat", () => {
+    const attempt = async (handler: 'findOne' | 'update' | 'remove', params: Doc) => {
+      const { controller, rows } = chatsWorld([savedRow('c1', 8)]);
+      const ctx = fakeCtx({ admin: 7, params, body: { title: 'x' } });
+      await controller[handler](ctx);
+      return { ctx, rows };
+    };
+
+    it.each(['findOne', 'update', 'remove'] as const)('is a 404 for %s, with the code not_found, and the same answer as for an ID nobody has', async (handler) => {
+      const others = await attempt(handler, { documentId: 'c1' });
+      const missing = await attempt(handler, { documentId: 'nobody' });
+      expect(others.ctx.status).toBe(404);
+      expect(others.ctx.body).toEqual({ error: { message: NO_CHAT, details: { code: 'not_found', hint: 'Reload the page: it may have been deleted.' } } });
+      expect(missing.ctx.body).toEqual(others.ctx.body);
+      expect(others.rows.get('c1')).toMatchObject({ adminUserId: 8, title: 'Which visits are waiting?' });
+    });
+  });
+
+  describe('a body that cannot be saved', () => {
+    it.each([['undefined', undefined], ['text', 'hello'], ['a list', []], ['no messages', { title: 'x' }], ['messages in the wrong shape', { messages: [{ id: 'm1', role: 'wizard', parts: [] }] }]])(
+      'is a 400 with a staff text for create: %s',
+      async (_what, body) => {
+        const { controller, rows } = chatsWorld();
+        const ctx = fakeCtx({ admin: 7, body });
+        await controller.create(ctx);
+        expect(ctx.status).toBe(400);
+        expect(ctx.body).toEqual({ error: { message: NOT_SAVED, details: { code: 'invalid_input', hint: 'Start a new chat and try again.' } } });
+        expect(rows.size).toBe(0);
+      }
+    );
+
+    it('is a 400 for update, and writes nothing', async () => {
+      const { controller, called } = chatsWorld([savedRow('c1', 7)]);
+      const ctx = fakeCtx({ admin: 7, params: { documentId: 'c1' }, body: { messages: 'hello' } });
+      await controller.update(ctx);
+      expect(ctx.status).toBe(400);
+      expect(called('update')).toEqual([]);
+    });
+
+    it.each([['undefined', undefined], ['text', 'hello'], ['a list', []], ['an empty object', {}], ['a title that is null', { title: null }], ['a title that is a number', { title: 42 }]])(
+      'is a 400 for update with nothing to save or a title that is not text: %s, and the chat is not changed',
+      async (_what, body) => {
+        const { controller, called, rows } = chatsWorld([savedRow('c1', 7)]);
+        const ctx = fakeCtx({ admin: 7, params: { documentId: 'c1' }, body });
+        await controller.update(ctx);
+        expect(ctx.status).toBe(400);
+        expect(ctx.body).toEqual({ error: { message: NOT_SAVED, details: { code: 'invalid_input', hint: 'Start a new chat and try again.' } } });
+        expect(called('update')).toEqual([]);
+        expect(rows.get('c1')).toEqual(savedRow('c1', 7));
+      }
+    );
+  });
+
+  describe('a request with no signed-in admin', () => {
+    it.each(['list', 'findOne', 'create', 'update', 'remove'] as const)('is a 401 for %s, and reaches no chat', async (handler) => {
+      const { controller, called } = chatsWorld([savedRow('c1', 7)]);
+      const ctx = fakeCtx({ admin: null, params: { documentId: 'c1' }, body: { title: 'x', messages: CHAT } });
+      await controller[handler](ctx);
+      expect(ctx.unauthorized).toHaveBeenCalledOnce();
+      expect(ctx.status).toBe(401);
+      expect(called('findMany') ?? []).toEqual([]);
+      expect(called('create')).toEqual([]);
+      expect(called('update')).toEqual([]);
+      expect(called('delete')).toEqual([]);
+    });
+
+    it('is a 401 for an id that is not a number: only a real admin session counts', async () => {
+      const { controller } = chatsWorld([savedRow('c1', 7)]);
+      const ctx = fakeCtx({ admin: null });
+      ctx.state = { user: { id: '7' } };
+      await controller.list(ctx);
+      expect(ctx.status).toBe(401);
+    });
+  });
+});
+
+describe('the saved chats routes', () => {
+  const gate = (action: string) => ['admin::isAuthenticatedAdmin', { name: 'admin::hasPermissions', config: { actions: [action] } }];
+  const routeOf = (method: string, path: string) => routes.admin.routes.find((route) => route.method === method && route.path === path);
+
+  it.each([
+    ['GET', '/conversations', 'conversations.list'],
+    ['POST', '/conversations', 'conversations.create'],
+    ['GET', '/conversations/:documentId', 'conversations.findOne'],
+    ['PUT', '/conversations/:documentId', 'conversations.update'],
+    ['DELETE', '/conversations/:documentId', 'conversations.remove'],
+  ])('send %s %s to %s, for admins who hold the assistant permission', (method, path, handler) => {
+    expect(routeOf(method, path)).toEqual({ method, path, handler, config: { policies: gate(ACTION.assistantUse) } });
+  });
+
+  it('are five, and all of them need the assistant permission and nothing less', () => {
+    const chats = routes.admin.routes.filter((route) => route.path.startsWith('/conversations'));
+    expect(chats).toHaveLength(5);
+    for (const route of chats) expect(route.config.policies, `${route.method} ${route.path}`).toEqual(gate('plugin::maison.assistant.use'));
+  });
+
+  it('name controller actions that exist', () => {
+    const instance = (controllers as Doc).conversations({ strapi: fakeStrapi() });
+    for (const action of ['list', 'findOne', 'create', 'update', 'remove']) expect(typeof instance[action], action).toBe('function');
   });
 });
