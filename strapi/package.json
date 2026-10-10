@@ -4,10 +4,11 @@
   "private": true,
   "description": "The Maison back end: Strapi 5 with the Maison plugin and Strapi's MCP server.",
   "scripts": {
-    "postinstall": "cd src/plugins/maison && npm install --include=dev && npm run build",
+    "postinstall": "cd src/plugins/maison && npm install --include=dev && npm run build && node ../../../scripts/share-strapi-utils.mjs",
     "build": "strapi build",
     "console": "strapi console",
     "deploy": "strapi deploy",
+    "predevelop": "node scripts/share-strapi-utils.mjs --check",
     "dev": "strapi develop",
     "develop": "strapi develop",
     "start": "strapi start",
