@@ -13,11 +13,19 @@ describe('conciergeSearch', () => {
 
   it('has no product when there is none, or it is not a slug: nothing else reaches the page or the instructions', () => {
     for (const product of [undefined, '', 'Weekender 50', '../x', 'a'.repeat(121), null, true, ['weekender-50'], { a: 1 }, -1.5]) {
-      expect(conciergeSearch({ product }), String(product)).toEqual({});
+      expect(conciergeSearch({ product }).product, String(product)).toBeUndefined();
+    }
+  });
+
+  it("says so with a `product` key set to undefined, not by leaving it out: the router adds the parent route's raw search to a validated one, so a missing key would let the raw value through", () => {
+    for (const product of [undefined, 'Weekender 50', '../x']) {
+      const result = conciergeSearch({ product });
+      expect(Object.hasOwn(result, 'product'), String(product)).toBe(true);
+      expect(result.product).toBeUndefined();
     }
   });
 
   it('drops every other parameter', () => {
-    expect(conciergeSearch({ product: 'cabin-case-55', other: 'x' })).toEqual({ product: 'cabin-case-55' });
+    expect(Object.keys(conciergeSearch({ product: 'cabin-case-55', other: 'x' }))).toEqual(['product']);
   });
 });
