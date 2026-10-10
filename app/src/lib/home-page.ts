@@ -1,5 +1,9 @@
 // Server only: it reads STRAPI_URL from process.env, which the browser never has. Import it from a server function
-// (task 3B wraps readHomePage in one), never from a component.
+// (routes/index.tsx wraps readHomePage in one), never from a component. The marker import below makes TanStack Start's
+// import protection fail the build when the client bundle reaches this file (see the execution-model skill in
+// @tanstack/start-client-core: "Import Protection: File Markers"). A type-only import of HomeText is fine.
+import '@tanstack/react-start/server-only';
+
 import { COPY } from './copy';
 import type { Locale } from './types';
 
