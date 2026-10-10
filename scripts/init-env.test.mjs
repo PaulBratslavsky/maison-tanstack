@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { GENERATED, initEnv, mergeEnv } from './init-env.mjs';
+import { GENERATED, initEnv, mergeEnv, setEnvValues } from './init-env.mjs';
 
 const EXAMPLE = [
   '# Strapi secrets.',
@@ -109,6 +109,70 @@ test('mergeEnv reads `KEY: value` the way dotenv does, and `KEY:value` as no key
   const { added } = mergeEnv('PORT: 1\nAPP_KEYS:x\n', EXAMPLE, fixedSecrets);
   assert.ok(!added.includes('PORT'));
   assert.ok(added.includes('APP_KEYS'));
+});
+
+test('mergeEnv treats a lone carriage return as a line ending, and drops no text', () => {
+  const { text, added } = mergeEnv('VITE_X=old\rA=1\r', 'VITE_X=old\rA=1\rB=2\r', fixedSecrets);
+  assert.equal(text, 'VITE_X=old\rA=1\rB=2\r');
+  assert.deepEqual(added, ['B']);
+});
+
+test('mergeEnv never reads a line inside a multi-line quoted value as a key', () => {
+  const existing = 'APP_KEYS=a\nNOTE="first line\nPORT=1\nlast line"\n';
+  const { text, added } = mergeEnv(existing, EXAMPLE, fixedSecrets);
+  assert.ok(added.includes('PORT'));
+  assert.ok(text.startsWith(existing));
+  assert.match(text, /\nPORT=1339\n/);
+});
+
+test('mergeEnv reads a quoted value that closes on its own line as one value, with single quotes too', () => {
+  const existing = "NOTE='first\nPORT=1\n'\nPORT=2\n";
+  const { added } = mergeEnv(existing, EXAMPLE, fixedSecrets);
+  assert.ok(!added.includes('PORT'));
+});
+
+test('mergeEnv reads a quote that never closes as a plain value, the way dotenv does', () => {
+  const { added } = mergeEnv('NOTE="open\nPORT=1\n', EXAMPLE, fixedSecrets);
+  assert.ok(!added.includes('PORT'));
+});
+
+test('mergeEnv does not close a quoted value at an escaped quote', () => {
+  const { added } = mergeEnv('NOTE="say \\"hi\\"\nPORT=1\n"\n', EXAMPLE, fixedSecrets);
+  assert.ok(added.includes('PORT'));
+});
+
+test('setEnvValues replaces only the named keys and keeps every other line and line ending', () => {
+  const existing = '# note\r\nA=1\nB=2\r\n\nC=3';
+  assert.equal(setEnvValues(existing, { B: 'new' }), '# note\r\nA=1\nB=new\r\n\nC=3');
+});
+
+test('setEnvValues adds a missing key at the end, with the file line ending', () => {
+  assert.equal(setEnvValues('A=1\n', { B: '2' }), 'A=1\nB=2\n');
+  assert.equal(setEnvValues('A=1\r\nB=2', { C: '3' }), 'A=1\r\nB=2\r\nC=3\r\n');
+  assert.equal(setEnvValues('A=1\r', { C: '3' }), 'A=1\rC=3\r');
+  assert.equal(setEnvValues('', { C: '3' }), 'C=3\n');
+});
+
+test('setEnvValues keeps `export `', () => {
+  assert.equal(setEnvValues('export A=1\nB=2\n', { A: 'x' }), 'export A=x\nB=2\n');
+});
+
+test('setEnvValues fills the last line of a duplicated key, and the first one too', () => {
+  const text = setEnvValues('A=first\nB=2\nA=last\n', { A: 'x' });
+  assert.equal(text, 'A=x\nB=2\nA=x\n');
+});
+
+test('setEnvValues keeps a lone carriage return line ending, and drops no text', () => {
+  assert.equal(setEnvValues('VITE_X=old\rA=1\r', { VITE_X: 'new' }), 'VITE_X=new\rA=1\r');
+});
+
+test('setEnvValues never reads a line inside a multi-line quoted value as a key', () => {
+  const existing = 'VITE_X="multi\nVITE_Y=keep"\n';
+  assert.equal(setEnvValues(existing, { VITE_Y: 'n' }), 'VITE_X="multi\nVITE_Y=keep"\nVITE_Y=n\n');
+});
+
+test('setEnvValues replaces a whole multi-line quoted value, and leaves no part of it behind', () => {
+  assert.equal(setEnvValues('A=1\nVITE_X="multi\nVITE_Y=keep"\nB=2\n', { VITE_X: 'n' }), 'A=1\nVITE_X=n\nB=2\n');
 });
 
 test('GENERATED makes four app keys and a password Strapi accepts', () => {
