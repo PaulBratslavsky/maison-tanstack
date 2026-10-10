@@ -17,3 +17,13 @@ test('the integration suites build the plugin, then check the shared @strapi/uti
   assert.equal(steps[1], 'node ../../../scripts/share-strapi-utils.mjs --check');
   assert.equal(steps.length, 2);
 });
+
+test('the root runs the LINE stand-in with line:stand-in, and the plugin has a test:live script for the labelling live test', () => {
+  assert.equal(scripts('package.json')['line:stand-in'], 'node scripts/line-stand-in.mjs');
+  assert.equal(scripts('strapi/src/plugins/maison/package.json')['test:live'], 'vitest run --config vitest.live.config.ts');
+});
+
+test('the plugin checks its built bundles for a static load of the TanStack AI packages after every build', () => {
+  const { postbuild } = scripts('strapi/src/plugins/maison/package.json');
+  assert.equal(postbuild, 'node scripts/check-esm-import.mjs');
+});

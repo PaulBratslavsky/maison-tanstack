@@ -12,6 +12,7 @@
     "dev:strapi": "npm run develop --prefix strapi",
     "dev:app": "npm run dev --prefix app",
     "setup": "node --env-file=strapi/.env strapi/scripts/maison-setup.mjs",
+    "line:stand-in": "node scripts/line-stand-in.mjs",
     "test": "npm test --prefix app && npm test --prefix strapi/src/plugins/maison && node strapi/scripts/share-strapi-utils.mjs --check && node --test scripts/*.test.mjs",
     "test:e2e": "npm run test:e2e --prefix app",
     "test:integration": "npm run test:integration --prefix strapi/src/plugins/maison",
