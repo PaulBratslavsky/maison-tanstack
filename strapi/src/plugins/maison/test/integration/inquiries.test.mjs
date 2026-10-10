@@ -11,6 +11,23 @@ const SENT = { sentMessages: [{ id: '1', quoteToken: 'q' }] };
 const USAGE = { totalUsage: 12 };
 const QUOTA = { type: 'limited', value: 200 };
 
+const COMPLAINT = {
+  kind: 'complaint',
+  sentimentScore: -0.6,
+  sentimentLabel: 'negative',
+  answered: true,
+  reason: 'The customer says the strap broke.',
+  topic: 'repairs',
+};
+const QUESTION = {
+  kind: 'question',
+  sentimentScore: 0,
+  sentimentLabel: 'neutral',
+  answered: false,
+  reason: 'No answer was found.',
+  topic: 'delivery',
+};
+
 // The three turns of the first sweep, and a fourth that a person labels before any sweep sees it.
 const STRAP = 'The strap on my bag broke after a week.';
 const DELIVERY = 'Do you deliver to Osaka by Friday?';
@@ -56,13 +73,59 @@ const startLineStub = async () => {
   };
 };
 
-/*
- * The labelling service is a stub in this phase: with AI off it marks pending rows skipped, and with a key it does nothing
- * yet. So staff label by hand here. The tests that label through a model come back in phase 5.
+/** What the customer wrote, from the labelling prompt: it puts the message between <customer_message> tags. */
+const customerMessageOf = (body) => {
+  const text = body.messages
+    .filter((message) => message.role === 'user')
+    .map((message) => (typeof message.content === 'string' ? message.content : message.content.map((part) => part.text).join('')))
+    .join('\n');
+  return /<customer_message>\n([\s\S]*?)\n<\/customer_message>/.exec(text)?.[1] ?? '';
+};
+
+/**
+ * A model on a free port of this machine, which answers Ollama's chat route (`POST /api/chat`) the way Ollama does. So the
+ * suite goes through the real TanStack AI, its Ollama adapter and the plugin's own build, and nothing reaches a model. It
+ * keeps every request. It labels a message that says "broke" a complaint, and any other a question nobody answered.
  */
-describe('inquiries, labelled by hand and replied to on LINE', () => {
+const startModelStub = async () => {
+  const requests = [];
+  const server = createServer((request, response) => {
+    let raw = '';
+    request.setEncoding('utf8');
+    request.on('data', (chunk) => (raw += chunk));
+    request.on('end', () => {
+      const body = JSON.parse(raw || 'null');
+      requests.push({ method: request.method, url: request.url, authorization: request.headers.authorization, body });
+      if (request.method !== 'POST' || request.url !== '/api/chat') {
+        response.writeHead(404, { 'Content-Type': 'application/json' });
+        response.end(JSON.stringify({ error: `The stand-in has no route ${request.method} ${request.url}` }));
+        return;
+      }
+      const labels = customerMessageOf(body).includes('broke') ? COMPLAINT : QUESTION;
+      response.writeHead(200, { 'Content-Type': 'application/json' });
+      response.end(
+        JSON.stringify({
+          model: body.model,
+          created_at: '2026-10-10T00:00:00Z',
+          message: { role: 'assistant', content: JSON.stringify(labels) },
+          done: true,
+          done_reason: 'stop',
+        })
+      );
+    });
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  return {
+    url: `http://127.0.0.1:${server.address().port}`,
+    requests,
+    close: () => new Promise((resolve) => server.close(resolve)),
+  };
+};
+
+describe('inquiries, labelled by a model through TanStack AI and replied to on LINE', () => {
   let strapi;
   let line;
+  let model;
   let inquiries;
   let labelling;
   let reference;
@@ -77,11 +140,22 @@ describe('inquiries, labelled by hand and replied to on LINE', () => {
     const result = await inquiries.log({ subject: SUBJECT_A, locale: 'en', ...turn });
     assert.deepEqual(result, { ok: true, value: { logged: true } });
   };
+  /** Turns the model off, as it is with no Ollama host: the ollama provider with no base URL and no key is none. */
+  const setBaseUrl = (value) => strapi.config.set('plugin::maison.aiBaseUrl', value);
 
   before(async () => {
     line = await startLineStub();
-    // No aiApiKey and no Ollama host: AI is off, as the harness leaves it.
-    strapi = await bootStrapi('inquiries', { maisonConfig: { lineChannelAccessToken: TOKEN, lineApiBaseUrl: line.url } });
+    model = await startModelStub();
+    strapi = await bootStrapi('inquiries', {
+      // No aiApiKey: the harness leaves none, so the stand-in never sees a real key. A host is all Ollama needs.
+      maisonConfig: {
+        lineChannelAccessToken: TOKEN,
+        lineApiBaseUrl: line.url,
+        aiProvider: 'ollama',
+        aiModel: 'stand-in',
+        aiBaseUrl: model.url,
+      },
+    });
     inquiries = strapi.plugin('maison').service('inquiries');
     labelling = strapi.plugin('maison').service('labelling');
   });
@@ -89,6 +163,7 @@ describe('inquiries, labelled by hand and replied to on LINE', () => {
   after(async () => {
     await strapi?.destroy();
     await line?.close();
+    await model?.close();
   });
 
   it('logs a complaint, a question nobody answered, and a hand-off with a real question', async () => {
@@ -113,33 +188,67 @@ describe('inquiries, labelled by hand and replied to on LINE', () => {
     assert.deepEqual(await inquiries.summary(), { needsAnswer: 1, complaint: 0, praise: 0, notLabelled: 3 });
   });
 
-  it('marks the three skipped while AI is off', async () => {
+  it('marks the three skipped while AI is off, and asks the model nothing', async () => {
+    setBaseUrl(null);
     const result = await labelling.sweep();
 
     assert.deepEqual(result, { labelled: 0, failed: 0, skipped: 3 });
+    assert.equal(model.requests.length, 0, 'the model stand-in got no request');
     for (const message of [STRAP, DELIVERY, ZIP]) assert.equal((await stored(message)).analysisStatus, 'skipped', message);
     // Skipped rows still wait under Not labelled.
     assert.deepEqual(await inquiries.summary(), { needsAnswer: 1, complaint: 0, praise: 0, notLabelled: 3 });
   });
 
-  it('staff label them by hand, and each lands in the queue the rule gives it', async () => {
-    const complaint = await inquiries.changeLabel((await stored(STRAP)).documentId, { kind: 'complaint', sentimentLabel: 'negative' });
-    assert.equal(complaint.ok, true, JSON.stringify(complaint));
-    assert.equal(complaint.value.queue, 'complaint');
-    const question = await inquiries.changeLabel((await stored(DELIVERY)).documentId, { kind: 'question' });
-    assert.equal(question.ok, true, JSON.stringify(question));
-    assert.equal(question.value.queue, 'needs-answer');
-    // A hand-off is in Needs an answer whatever its kind is: it is answered under Questions.
-    const handOff = await inquiries.changeLabel((await stored(ZIP)).documentId, { kind: 'complaint' });
-    assert.equal(handOff.ok, true, JSON.stringify(handOff));
-    assert.equal(handOff.value.queue, 'needs-answer');
-    assert.equal((await stored(ZIP)).questionReference, reference);
+  it('labels them through TanStack AI once AI is on, with a request for each to the stand-in', async () => {
+    setBaseUrl(model.url);
+    const result = await labelling.sweep();
 
-    const row = await stored(STRAP);
-    assert.equal(row.kind, 'complaint');
-    assert.equal(row.sentimentLabel, 'negative');
-    assert.equal(row.humanCorrected, true);
-    assert.equal(row.analysisStatus, 'skipped', 'only the sweep says whether AI was on');
+    assert.deepEqual(result, { labelled: 3, failed: 0, skipped: 0 });
+    assert.equal(model.requests.length, 3);
+    for (const request of model.requests) {
+      assert.equal(request.method, 'POST');
+      assert.equal(request.url, '/api/chat');
+      assert.equal(request.authorization, undefined, 'no key: no Authorization header');
+      assert.equal(request.body.model, 'stand-in');
+      assert.equal(request.body.stream, false);
+      assert.equal(request.body.think, false, 'Qwen3 is told not to think');
+      assert.equal(request.body.messages[0].role, 'system');
+      assert.match(request.body.messages[0].content, /^You label one exchange between a customer and Maison's concierge/);
+      assert.deepEqual(Object.keys(request.body.format.properties), ['kind', 'sentimentScore', 'sentimentLabel', 'answered', 'reason', 'topic']);
+    }
+    assert.equal(
+      JSON.stringify(model.requests).includes(SUBJECT_A.slice('line:U'.length)),
+      false,
+      "the customer's LINE ID is in none of the model's requests"
+    );
+  });
+
+  it('stores the labels, the model and the prompt version, and the queue the rule gives each row', async () => {
+    const complaint = await stored(STRAP);
+    assert.equal(complaint.kind, 'complaint');
+    assert.equal(complaint.sentimentScore, -0.6);
+    assert.equal(complaint.sentimentLabel, 'negative');
+    assert.equal(complaint.answered, true);
+    assert.equal(complaint.reason, 'The customer says the strap broke.');
+    assert.equal(complaint.topic, 'repairs');
+    assert.equal(complaint.analysisStatus, 'analyzed');
+    assert.equal(complaint.analysisAttempts, 0);
+    assert.equal(complaint.modelVersion, 'ollama/stand-in');
+    assert.equal(complaint.promptVersion, 'inquiry-labels-1');
+    assert.equal(complaint.queue, 'complaint');
+
+    const question = await stored(DELIVERY);
+    assert.equal(question.kind, 'question');
+    assert.equal(question.answered, false);
+    assert.equal(question.queue, 'needs-answer');
+
+    // The model calls the hand-off a complaint, and it is still in Needs an answer: it is answered under Questions.
+    const handOff = await stored(ZIP);
+    assert.equal(handOff.kind, 'complaint');
+    assert.equal(handOff.analysisStatus, 'analyzed');
+    assert.equal(handOff.handedOff, true);
+    assert.equal(handOff.queue, 'needs-answer');
+    assert.equal(handOff.questionReference, reference);
   });
 
   it('counts them for the cards, and lists them under their queues', async () => {
@@ -153,8 +262,9 @@ describe('inquiries, labelled by hand and replied to on LINE', () => {
     assert.deepEqual(handOff.question, { reference, status: 'open' });
   });
 
-  it('a second sweep has nothing to do', async () => {
+  it('a second sweep has nothing to label, and asks the model nothing', async () => {
     assert.deepEqual(await labelling.sweep(), { labelled: 0, failed: 0, skipped: 0 });
+    assert.equal(model.requests.length, 3);
   });
 
   it('Change label moves the complaint to praise and marks it corrected, and a sweep leaves it alone', async () => {
@@ -172,9 +282,10 @@ describe('inquiries, labelled by hand and replied to on LINE', () => {
     assert.equal(row.kind, 'praise');
     assert.equal(row.queue, 'praise');
     assert.equal(row.humanCorrected, true);
+    assert.equal(model.requests.length, 3, 'the stand-in got nothing more');
   });
 
-  it('a row a person labels before the sweep sees it leaves Not labelled, and the sweep with AI off marks it skipped and keeps the label', async () => {
+  it('a row a person labels before the sweep sees it is never sent to the model, and leaves Not labelled', async () => {
     await logTurn({ message: CLASP, reply: 'I am sorry to hear that.', knowledgeFound: false, handedOff: false });
     assert.deepEqual(await inquiries.summary(), { needsAnswer: 2, complaint: 0, praise: 1, notLabelled: 1 });
 
@@ -185,14 +296,13 @@ describe('inquiries, labelled by hand and replied to on LINE', () => {
     assert.equal(changed.value.analysisStatus, 'pending');
     assert.deepEqual(await inquiries.summary(), { needsAnswer: 2, complaint: 1, praise: 1, notLabelled: 0 });
 
-    // With AI off the sweep marks every pending row skipped, a labelled one too: `skipped` says only that AI was off.
-    assert.deepEqual(await labelling.sweep(), { labelled: 0, failed: 0, skipped: 1 });
+    assert.deepEqual(await labelling.sweep(), { labelled: 0, failed: 0, skipped: 0 });
 
     const row = await stored(CLASP);
-    assert.equal(row.analysisStatus, 'skipped');
+    assert.equal(row.analysisStatus, 'pending');
     assert.equal(row.kind, 'complaint');
-    assert.equal(row.humanCorrected, true);
-    assert.equal(row.reason ?? null, null, 'no model gave a reason');
+    assert.equal(row.reason ?? null, null, "the model's reason is not on a row it never labelled");
+    assert.equal(model.requests.length, 3, 'the stand-in got nothing more');
   });
 
   it("Reply on LINE to the complaint pushes one message to the stand-in, with the spec's text, and records it", async () => {
@@ -266,8 +376,10 @@ describe('inquiries, labelled by hand and replied to on LINE', () => {
 
   // The README's AI-off path: with no key, Change label is the only way to label, and Question is the likeliest pick.
   it('with AI off, a skipped row a person labels Question lands in Needs an answer, where a sentiment alone could not have put it', async () => {
+    setBaseUrl(null);
     await logTurn({ message: SUNDAY, reply: 'I am not sure.', knowledgeFound: false, handedOff: false });
-    assert.deepEqual(await labelling.sweep(), { labelled: 0, failed: 0, skipped: 1 });
+    // Two rows are pending: this turn, and the clasp a person labelled before any sweep saw it. `skipped` says only that AI was off.
+    assert.deepEqual(await labelling.sweep(), { labelled: 0, failed: 0, skipped: 2 });
     const skipped = await stored(SUNDAY);
     assert.equal(skipped.analysisStatus, 'skipped');
     assert.equal(skipped.queue, 'none');
@@ -294,17 +406,6 @@ describe('inquiries, labelled by hand and replied to on LINE', () => {
     assert.deepEqual(await inquiries.summary(), { needsAnswer: 3, complaint: 0, praise: 1, notLabelled: 0 });
     assert.deepEqual((await listed('needs-answer')).map((view) => view.message).sort(), [DELIVERY, SUNDAY, ZIP].sort());
     assert.deepEqual(await listed('not-labelled'), []);
-  });
-
-  it('with a key set, the stub does nothing yet: a new turn stays pending until phase 5 labels it', async () => {
-    await logTurn({ message: STRAP, reply: 'Another reply.', knowledgeFound: false, handedOff: false });
-    strapi.config.set('plugin::maison.aiApiKey', 'a-key-for-a-test-that-reaches-no-model');
-    try {
-      assert.deepEqual(await labelling.sweep(), { labelled: 0, failed: 0, skipped: 0 });
-      const rows = await strapi.documents(INQUIRY).findMany({ filters: { message: { $eq: STRAP }, analysisStatus: { $eq: 'pending' } } });
-      assert.equal(rows.length, 1);
-    } finally {
-      strapi.config.set('plugin::maison.aiApiKey', null);
-    }
+    assert.equal(model.requests.length, 3, 'the stand-in got nothing more: AI was off');
   });
 });
