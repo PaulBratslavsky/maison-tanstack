@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { adapterFor } from '../../server/src/ai/provider';
+import { loadSdk } from '../../server/src/ai/sdk';
 import { LABEL_BATCH, MAX_LABEL_ATTEMPTS, UID } from '../../server/src/constants';
 import { PROMPT_VERSION, labelSystemPrompt, labelUserMessage, labelsSchema, type Labels } from '../../server/src/domain/inquiry-criteria';
 import labelling from '../../server/src/services/labelling';
@@ -13,6 +14,12 @@ vi.mock('../../server/src/ai/provider', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../server/src/ai/provider')>()),
   adapterFor: vi.fn(),
 }));
+
+// The SDK is the real one, except in the tests that need chat() to throw before it returns a promise.
+vi.mock('../../server/src/ai/sdk', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../../server/src/ai/sdk')>();
+  return { ...original, loadSdk: vi.fn(original.loadSdk) };
+});
 
 type Doc = Record<string, any>;
 
@@ -216,6 +223,75 @@ describe('labelling.label', () => {
     } finally {
       spy.mockRestore();
     }
+  });
+
+  describe('when chat() throws before it returns a promise', () => {
+    const SYNC_FAILURE = new Error('chat() threw at once');
+    const unhandled: unknown[] = [];
+    const record = (reason: unknown) => unhandled.push(reason);
+
+    beforeEach(() => {
+      unhandled.length = 0;
+      process.on('unhandledRejection', record);
+      const original = vi.mocked(loadSdk).getMockImplementation()!;
+      vi.mocked(loadSdk).mockImplementationOnce(async () => ({
+        ...(await original()),
+        chat: () => {
+          throw SYNC_FAILURE;
+        },
+      }));
+    });
+
+    afterEach(() => {
+      process.off('unhandledRejection', record);
+    });
+
+    /** AbortSignal.timeout answers this signal, and the count of its abort listeners is kept. */
+    const watchedTimeout = (signal: AbortSignal = new AbortController().signal) => {
+      let listeners = 0;
+      const add = signal.addEventListener.bind(signal);
+      const remove = signal.removeEventListener.bind(signal);
+      vi.spyOn(signal, 'addEventListener').mockImplementation((type: string, ...rest: [any, any?]) => {
+        if (type === 'abort') listeners += 1;
+        return add(type, ...rest);
+      });
+      vi.spyOn(signal, 'removeEventListener').mockImplementation((type: string, ...rest: [any, any?]) => {
+        if (type === 'abort') listeners -= 1;
+        return remove(type, ...rest);
+      });
+      vi.spyOn(AbortSignal, 'timeout').mockReturnValue(signal);
+      return { listeners: () => listeners };
+    };
+
+    it('leaves no timeout listener, and the timeout that fires later rejects nothing unhandled', async () => {
+      const controller = new AbortController();
+      const watched = watchedTimeout(controller.signal);
+      try {
+        const { service } = world({ model: modelAnswering(() => COMPLAINT) });
+
+        await expect(service.label(EXCHANGE)).rejects.toBe(SYNC_FAILURE);
+        expect(watched.listeners()).toBe(0);
+
+        controller.abort();
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        expect(unhandled).toEqual([]);
+      } finally {
+        vi.mocked(AbortSignal.timeout).mockRestore();
+      }
+    });
+
+    it('rejects nothing unhandled when the timeout had passed already', async () => {
+      watchedTimeout(AbortSignal.abort(new DOMException('The operation was aborted due to timeout', 'TimeoutError')));
+      try {
+        const { service } = world({ model: modelAnswering(() => COMPLAINT) });
+
+        await expect(service.label(EXCHANGE)).rejects.toBeDefined();
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        expect(unhandled).toEqual([]);
+      } finally {
+        vi.mocked(AbortSignal.timeout).mockRestore();
+      }
+    });
   });
 
   // Some Claude models refuse a sampling parameter (temperature, top_p, top_k) and a disabled thinking mode, and the labels

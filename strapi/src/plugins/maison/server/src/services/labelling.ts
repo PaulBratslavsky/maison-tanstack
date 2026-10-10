@@ -153,20 +153,23 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
       else timeout.addEventListener('abort', onTimeout, { once: true });
     });
     const modelOptions = modelOptionsOf(settings);
-    // `debug: false` keeps the SDK's own logger quiet: it prints error objects, and nothing may carry the key to a log.
-    const call = chat({
-      adapter,
-      systemPrompts: [labelSystemPrompt()],
-      messages: [{ role: 'user', content: labelUserMessage({ ...input, reply: input.reply ?? '' }) }],
-      outputSchema: labelsSchema,
-      abortController,
-      wrapFetch: watchFetch(seen),
-      debug: false,
-      ...(modelOptions ? { modelOptions } : {}),
-    });
-    // If the timeout wins the race, a late failure of the call has no one left to hear it.
-    call.catch(() => undefined);
+    // The timeout promise may reject with no one racing it: when chat() throws before it returns, or when the call wins.
+    timedOut.catch(() => undefined);
     try {
+      // `debug: false` keeps the SDK's own logger quiet: it prints error objects, and nothing may carry the key to a log.
+      // The call is inside the `try`, so a chat() that throws at once still removes the listener.
+      const call = chat({
+        adapter,
+        systemPrompts: [labelSystemPrompt()],
+        messages: [{ role: 'user', content: labelUserMessage({ ...input, reply: input.reply ?? '' }) }],
+        outputSchema: labelsSchema,
+        abortController,
+        wrapFetch: watchFetch(seen),
+        debug: false,
+        ...(modelOptions ? { modelOptions } : {}),
+      });
+      // If the timeout wins the race, a late failure of the call has no one left to hear it.
+      call.catch(() => undefined);
       return (await Promise.race([call, timedOut])) as Labels;
     } finally {
       timeout.removeEventListener('abort', onTimeout);
