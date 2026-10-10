@@ -39,6 +39,22 @@ describe('the strapi-oauth-mcp-manager config', () => {
     expect(config.config.identityProviders).toEqual({ line: { channelId: '2001234567' } });
   });
 
+  it('trims the channel ID and the verify URL, as it trims the Maison values', () => {
+    const config = oauthConfig({ LINE_LOGIN_CHANNEL_ID: ' 2001234567\n', LINE_VERIFY_URL: '  http://127.0.0.1:4546/oauth2/v2.1/verify\r\n' });
+    expect(config.config.identityProviders).toEqual({
+      line: { channelId: '2001234567', verifyUrl: 'http://127.0.0.1:4546/oauth2/v2.1/verify' },
+    });
+  });
+
+  it('counts a verify URL of only spaces as unset', () => {
+    const config = oauthConfig({ LINE_LOGIN_CHANNEL_ID: '2001234567', LINE_VERIFY_URL: ' \n ' });
+    expect(config.config.identityProviders).toEqual({ line: { channelId: '2001234567' } });
+  });
+
+  it('counts a channel ID of only spaces as unset', () => {
+    expect(oauthConfig({ LINE_LOGIN_CHANNEL_ID: ' \n', LINE_VERIFY_URL: 'http://127.0.0.1:4546' }).config.identityProviders).toEqual({});
+  });
+
   it('gives no identity providers when the channel ID is empty or missing', () => {
     expect(oauthConfig({ LINE_LOGIN_CHANNEL_ID: '', LINE_VERIFY_URL: 'http://127.0.0.1:4546' }).config.identityProviders).toEqual({});
     expect(oauthConfig({}).config.identityProviders).toEqual({});

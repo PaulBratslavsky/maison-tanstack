@@ -24,11 +24,12 @@ const deniedTypes = [
 ];
 
 const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin => {
-  // env() returns '' for a key that is in .env but empty, so empty counts as unset below.
-  const lineChannelId = env('LINE_LOGIN_CHANNEL_ID', '');
+  // env() returns '' for a key that is in .env but empty, so empty counts as unset below. Each value is trimmed first,
+  // like the Maison values, so a stray space or newline never reaches LINE.
+  const lineChannelId = env('LINE_LOGIN_CHANNEL_ID', '').trim();
   // Never in production (Strapi Cloud runs NODE_ENV=production): there LINE verifies ID tokens, whatever
   // LINE_VERIFY_URL says, because with the verify mock anyone could sign in as any customer.
-  const lineVerifyUrl = env('NODE_ENV') === 'production' ? '' : env('LINE_VERIFY_URL', '');
+  const lineVerifyUrl = env('NODE_ENV') === 'production' ? '' : env('LINE_VERIFY_URL', '').trim();
 
   return {
     'users-permissions': {
