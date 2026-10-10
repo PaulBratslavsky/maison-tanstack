@@ -121,6 +121,19 @@ class TurnRecorder {
 }
 
 /**
+ * The pass's event, put into the first run's last message: its text and its tool calls say which message they belong to
+ * (Anthropic's adapter gives each model response its own id), and the browser makes a new message for an id it hasn't
+ * seen. Under the first reply's own id the picker lands in the message that holds its words: one reply. Without a message
+ * to continue (the first run said nothing), the event is left as it is.
+ */
+const intoMessage = (chunk: StreamChunk, id: string | undefined): StreamChunk => {
+  if (id === undefined) return chunk;
+  if (chunk.type === EventType.TOOL_CALL_START) return { ...chunk, parentMessageId: id };
+  if (chunk.type === EventType.TEXT_MESSAGE_START || chunk.type === EventType.TEXT_MESSAGE_CONTENT || chunk.type === EventType.TEXT_MESSAGE_END) return { ...chunk, messageId: id };
+  return chunk;
+};
+
+/**
  * The extra pass's middleware for Anthropic: the first model call must call a tool, and a call after it must call
  * choose_visit until one was made (a call the check of its pieces refused counts: the model then needs only a tool).
  * `chat()` has no tool choice option, so this sets Anthropic's own `tool_choice` for each call, in `onConfig`. The Ollama
@@ -318,10 +331,15 @@ export async function handleConcierge(request: Request, deps: ConciergeDeps): Pr
     };
 
     /**
-     * The turn's events, as one response. The first run's events go out as they come, but its last finish is held back:
-     * the extra pass adds its events to the same message first (a finish would close the stream for the browser), and
-     * its own finish, the one that waits for the customer at the picker, ends the response. Without a picker, the first
-     * run's finish ends it. The turn is logged once, after both passes, and the client is closed after the log.
+     * The turn's events, as one response, in this order:
+     * 1. The first run's events, as they come. Its last finish is held back, since a finish closes the message for the
+     *    browser. A finish before it (one for each tool phase) goes out when the next event arrives.
+     * 2. The extra pass's events, when it showed a picker, after the first run's words. They are put into the first run's
+     *    last message (intoMessage), so the picker shows in the same reply as those words. Its start is left out (one run
+     *    has one start), and so is its snapshot, which would replace the browser's conversation with the pass's own two
+     *    messages and lose the first reply's words (handle-client.test.ts holds this on the real ChatClient).
+     * 3. One finish, last: the pass's, the one that waits for the customer at the picker, or else the first run's.
+     * The turn is logged once, after both passes, and the client is closed after the log.
      */
     async function* reply(): AsyncGenerator<StreamChunk> {
       let loggable: TurnPart[] | null = null;
@@ -384,7 +402,8 @@ export async function handleConcierge(request: Request, deps: ConciergeDeps): Pr
             while (turnMessages.at(-1)?.role === 'assistant') turnMessages.pop();
             const pass = await pickerPass(turnMessages as ModelMessage[], budget.ms);
             if ('events' in pass) {
-              yield* pass.events;
+              const home = recorder.messages().findLast((message) => message.role === 'assistant')?.id;
+              for (const event of pass.events) yield intoMessage(event, home);
               finish = pass.finish;
               turn = [...turn, ...pass.parts];
               loggable = turn;

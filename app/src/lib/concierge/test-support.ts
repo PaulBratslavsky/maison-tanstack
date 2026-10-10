@@ -41,8 +41,9 @@ export const scriptedModel = (steps: Step[]) => {
       const threadId = options.threadId ?? 'thread-1';
       if (step.pause) await new Promise((resolve) => setTimeout(resolve, step.pause));
       yield { type: EventType.RUN_STARTED, runId, threadId, timestamp: Date.now() } as StreamChunk;
+      // As Anthropic's adapter does: the words and the calls of one model response share one message id.
+      const messageId = `message-${index}`;
       if (step.words) {
-        const messageId = `message-${index}`;
         yield { type: EventType.TEXT_MESSAGE_START, messageId, role: 'assistant', timestamp: Date.now() } as StreamChunk;
         yield { type: EventType.TEXT_MESSAGE_CONTENT, messageId, delta: step.words, timestamp: Date.now() } as StreamChunk;
         yield { type: EventType.TEXT_MESSAGE_END, messageId, timestamp: Date.now() } as StreamChunk;
@@ -59,7 +60,7 @@ export const scriptedModel = (steps: Step[]) => {
       }
       for (const [place, { id, name, input }] of (step.calls ?? []).entries()) {
         const args = JSON.stringify(input);
-        yield { type: EventType.TOOL_CALL_START, toolCallId: id, toolCallName: name, toolName: name, index: place, timestamp: Date.now() } as StreamChunk;
+        yield { type: EventType.TOOL_CALL_START, toolCallId: id, toolCallName: name, toolName: name, parentMessageId: messageId, index: place, timestamp: Date.now() } as StreamChunk;
         yield { type: EventType.TOOL_CALL_ARGS, toolCallId: id, delta: args, args, timestamp: Date.now() } as StreamChunk;
         yield { type: EventType.TOOL_CALL_END, toolCallId: id, toolCallName: name, toolName: name, input, timestamp: Date.now() } as StreamChunk;
       }
