@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { COPY } from '../lib/copy';
+import { pickerInputOf } from '../lib/picker-input';
 import type { Product } from '../lib/types';
 import { useTool } from '../lib/use-tool';
 import { piecesOf, pickerPrefill, type VisitPickerOutput } from '../lib/visit-picker';
@@ -36,8 +37,10 @@ export function VisitPicker({
   const { locale } = useMaison();
   const t = COPY[locale];
   // The call is read once: from then on, what the form shows is the customer's to change.
-  const [initial] = useState(() => pickerPrefill(input, new Date()));
-  const products = piecesOf(input);
+  // It is read as the server read it (pickerInputOf): tidied, so spaces and case in the call do not lose a value.
+  const call = pickerInputOf(input);
+  const [initial] = useState(() => pickerPrefill(call, new Date()));
+  const products = piecesOf(call);
 
   return (
     <section data-testid="visit-picker" aria-label={t.bookVisit} className="border border-ink">

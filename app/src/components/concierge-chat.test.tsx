@@ -176,6 +176,13 @@ describe('a visit picker in the chat', () => {
     expect(within(picker).getByRole('button', { name: 'Not now' })).toBeTruthy();
   });
 
+  it('fills the form from the tidied call: spaces and case in the time do not drop it to the default', async () => {
+    const steps: Step[] = [{ words: 'Here.', calls: [{ id: 'c-picker', name: CHOOSE_VISIT, input: { productSlugs: ['weekender-50'], boutique: ' Ginza ', time: ' 16:30 ' } }] }];
+    await askForVisit(mount(steps));
+    const picker = screen.getByTestId('visit-picker');
+    expect(within(picker).getByRole('radio', { name: '16:30' }).getAttribute('aria-checked')).toBe('true');
+  });
+
   it('puts the pieces found above the picker, under the words that suggested them', async () => {
     await askForVisit(mount(toPicker));
     const grid = screen.getByRole('link', { name: /Weekender 50/ });
