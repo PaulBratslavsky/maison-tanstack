@@ -23,52 +23,71 @@ export const GENERATED = {
   DEMO_ADMIN_PASSWORD: () => `Maison1-${randomBytes(18).toString('base64url')}`,
 };
 
-const isPlaceholder = (value) => value === '' || /^["']?tobemodified/i.test(value);
+// Only an empty value or exactly `tobemodified` (quoted or not) is a placeholder.
+const isPlaceholder = (value) => value === '' || /^(["']?)tobemodified\1$/i.test(value);
 
-// A line that sets a key, as dotenv reads it: an optional `export `, the key, then `=` or `:`.
-const KEY_LINE = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_.-]*)\s*[=:]\s?(.*)$/;
+// A line that sets a key, as dotenv reads it: an optional `export `, the key, then `=` or `: `.
+const KEY_LINE = /^\s*(export\s+)?([\w.-]+)(?:\s*=|:\s)\s*(.*)$/;
 
-function keysOf(text) {
-  const keys = new Map();
-  for (const line of text.split(/\r?\n/)) {
-    const match = line.match(KEY_LINE);
-    if (match && !line.trimStart().startsWith('#')) keys.set(match[1], match[2].trim());
+/** Splits text into lines that each keep their own line ending ('' for a last line without one). */
+function linesOf(text) {
+  const lines = [];
+  const pattern = /([^\r\n]*)(\r\n|\n|$)/g;
+  for (const match of text.matchAll(pattern)) {
+    if (match[0] === '') break;
+    lines.push({ text: match[1], eol: match[2] });
   }
+  return lines;
+}
+
+/** The key a line sets, its value and its `export ` prefix, or null for a comment or other line. */
+function setting(line) {
+  if (line.text.trimStart().startsWith('#')) return null;
+  const match = line.text.match(KEY_LINE);
+  return match ? { exported: Boolean(match[1]), key: match[2], value: match[3].trim() } : null;
+}
+
+/** Each key's last line, the one dotenv reads. */
+function lastLineOfEachKey(lines) {
+  const keys = new Map();
+  lines.forEach((line, index) => {
+    const found = setting(line);
+    if (found) keys.set(found.key, { ...found, index });
+  });
   return keys;
 }
 
 /**
  * Merges an example file into an existing .env text (or null when there is none).
- * Returns the new text and the names it added and filled. Never changes a set value.
+ * Returns the new text and the names it added and filled. Never changes a set value, and returns the
+ * text unchanged when there is nothing to add or fill.
  */
 export function mergeEnv(existing, example, secrets = GENERATED) {
-  const eol = existing?.includes('\r\n') ? '\r\n' : '\n';
-  let lines = (existing ?? example).split(/\r?\n/);
-  const present = keysOf(lines.join('\n'));
+  const lines = linesOf(existing ?? example);
+  const present = lastLineOfEachKey(lines);
   const added = [];
 
   if (existing !== null) {
-    // Drop the empty last element from a trailing newline, so the added keys follow the last line.
-    if (lines.at(-1) === '') lines.pop();
-    for (const [key, value] of keysOf(example)) {
+    const eol = existing.includes('\r\n') ? '\r\n' : '\n';
+    for (const [key, { value }] of lastLineOfEachKey(linesOf(example))) {
       if (present.has(key)) continue;
-      lines.push(`${key}=${value}`);
-      present.set(key, value);
+      const last = lines.at(-1);
+      if (last && last.eol === '') last.eol = eol;
+      lines.push({ text: `${key}=${value}`, eol });
+      present.set(key, { exported: false, key, value, index: lines.length - 1 });
       added.push(key);
     }
-    lines.push('');
   }
 
   const filled = [];
   for (const [key, make] of Object.entries(secrets)) {
-    if (!present.has(key) || !isPlaceholder(present.get(key))) continue;
-    const index = lines.findIndex((line) => line.match(KEY_LINE)?.[1] === key && !line.trimStart().startsWith('#'));
-    const prefix = lines[index].trimStart().startsWith('export ') ? 'export ' : '';
-    lines[index] = `${prefix}${key}=${make()}`;
+    const found = present.get(key);
+    if (!found || !isPlaceholder(found.value)) continue;
+    lines[found.index].text = `${found.exported ? 'export ' : ''}${key}=${make()}`;
     filled.push(key);
   }
 
-  return { text: lines.join(eol), added, filled };
+  return { text: lines.map((line) => line.text + line.eol).join(''), added, filled };
 }
 
 /** Creates or merges `<app>/.env` for each app that has a `.env.example`. */

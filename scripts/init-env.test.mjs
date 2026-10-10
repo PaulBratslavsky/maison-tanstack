@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { initEnv, mergeEnv } from './init-env.mjs';
+import { GENERATED, initEnv, mergeEnv } from './init-env.mjs';
 
 const EXAMPLE = [
   '# Strapi secrets.',
@@ -74,6 +74,60 @@ test('mergeEnv reads keys written as `export KEY=`', () => {
   const { text, added } = mergeEnv(existing, EXAMPLE, fixedSecrets);
   assert.ok(!added.includes('AI_API_KEY'));
   assert.match(text, /^export AI_API_KEY=kept-value$/m);
+});
+
+test('mergeEnv fills only the last line of a duplicated key, the one dotenv reads', () => {
+  const existing = 'APP_KEYS=real\nAI_API_KEY=x\nAPP_KEYS=\n';
+  const { text } = mergeEnv(existing, EXAMPLE, fixedSecrets);
+  assert.match(text, /^APP_KEYS=real\nAI_API_KEY=x\nAPP_KEYS=made-keys\n/);
+});
+
+test('mergeEnv never fills a set value that only starts with tobemodified', () => {
+  const existing = 'APP_KEYS=tobemodifiedreal\nADMIN_JWT_SECRET="tobemodified"\n';
+  const { text, filled } = mergeEnv(existing, EXAMPLE, fixedSecrets);
+  assert.match(text, /^APP_KEYS=tobemodifiedreal$/m);
+  assert.deepEqual(filled, ['ADMIN_JWT_SECRET']);
+});
+
+test('mergeEnv fills an empty `export KEY=` and keeps the export', () => {
+  const { text } = mergeEnv('export APP_KEYS=\n', EXAMPLE, fixedSecrets);
+  assert.match(text, /^export APP_KEYS=made-keys$/m);
+});
+
+test('mergeEnv returns the file unchanged when nothing is missing, even without a trailing newline', () => {
+  const existing = 'APP_KEYS=a\r\nADMIN_JWT_SECRET=b\nPORT=1\r\nAI_API_KEY=c';
+  assert.equal(mergeEnv(existing, EXAMPLE, fixedSecrets).text, existing);
+});
+
+test('mergeEnv keeps each line ending as it was and adds a line break before added keys', () => {
+  const existing = 'APP_KEYS=a\r\nADMIN_JWT_SECRET=b\nAI_API_KEY=c';
+  const { text } = mergeEnv(existing, EXAMPLE, fixedSecrets);
+  assert.equal(text, 'APP_KEYS=a\r\nADMIN_JWT_SECRET=b\nAI_API_KEY=c\r\nPORT=1339\r\n');
+});
+
+test('mergeEnv reads `KEY: value` the way dotenv does, and `KEY:value` as no key', () => {
+  const { added } = mergeEnv('PORT: 1\nAPP_KEYS:x\n', EXAMPLE, fixedSecrets);
+  assert.ok(!added.includes('PORT'));
+  assert.ok(added.includes('APP_KEYS'));
+});
+
+test('GENERATED makes four app keys and a password Strapi accepts', () => {
+  assert.equal(GENERATED.APP_KEYS().split(',').length, 4);
+  const password = GENERATED.DEMO_ADMIN_PASSWORD();
+  assert.match(password, /[a-z]/);
+  assert.match(password, /[A-Z]/);
+  assert.match(password, /\d/);
+  assert.ok(password.length >= 8 && password.length <= 72);
+});
+
+test('initEnv run twice changes nothing the second time', () => {
+  const root = project({ 'strapi/.env.example': EXAMPLE });
+  initEnv({ root, apps: ['strapi'], log: () => {} });
+  const first = readFileSync(join(root, 'strapi/.env'), 'utf8');
+  const lines = [];
+  initEnv({ root, apps: ['strapi'], log: (line) => lines.push(line) });
+  assert.equal(readFileSync(join(root, 'strapi/.env'), 'utf8'), first);
+  assert.deepEqual(lines, []);
 });
 
 test('initEnv writes each .env with mode 600, prints names only, and never a value', () => {
