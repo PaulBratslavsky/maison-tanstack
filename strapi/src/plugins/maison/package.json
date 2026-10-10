@@ -36,7 +36,7 @@
     "verify": "strapi-plugin verify",
     "test": "vitest run",
     "test:watch": "vitest",
-    "pretest:integration": "npm run build",
+    "pretest:integration": "npm run build && node ../../../scripts/share-strapi-utils.mjs --check",
     "test:integration": "node --test --test-concurrency=1 \"test/integration/*.test.mjs\"",
     "test:ts:front": "tsc -p admin/tsconfig.json --noEmit",
     "test:ts:back": "tsc -p server/tsconfig.json --noEmit"
