@@ -1,0 +1,196 @@
+{
+  "entries": [
+    {
+      "category": "care",
+      "productSlugs": [],
+      "title": "How do I care for the leather?",
+      "answer": "Wipe the leather with a soft, dry cloth after use, and keep it away from direct sunlight and heat. If it gets wet, blot it gently and let it dry at room temperature, never with a hair dryer. Once or twice a year, any boutique can treat it with our neutral leather balm, free of charge.",
+      "keywords": "leather, calfskin, clean, cleaning, wipe, polish, balm, cream, conditioner, wet, rain, water, stain, scratch, sun, dry, care, look after, maintain",
+      "ja": {
+        "title": "革のお手入れはどうすればよいですか？",
+        "answer": "お使いになった後は、柔らかい乾いた布で革を拭き、直射日光の当たる場所や、高温になる場所は避けてください。濡れてしまった場合は、やさしく押さえるように水気を取り、ドライヤーはお使いにならずに、室温で自然に乾かしてください。年に 1〜2 回、どのブティックでも、Maisonの無色のレザーバームによるお手入れを無料で承ります。",
+        "keywords": "革, レザー, 革製品, カーフ, カーフスキン, 牛革, お手入れ, 手入れ, お手入れ方法, 手入れ方法, ケア, メンテナンス, 使用後, 拭く, 拭き方, 磨く, 艶出し, バーム, レザーバーム, クリーム, 保革, コンディショナー, 汚れ, 雨, 濡れ, 濡れた, 水濡れ, 水, シミ, 染み, 傷, キズ, 日光, 直射日光, 日焼け, 熱, 高温, 乾かす, 乾燥, ドライヤー, 保管"
+      }
+    },
+    {
+      "category": "care",
+      "productSlugs": ["voyage-trunk-110", "cabin-case-55"],
+      "title": "How do I clean the canvas?",
+      "answer": "Dust the canvas with a soft brush or a dry cloth. For a mark, use a cloth barely dampened with water, then let it dry in the open air. Avoid solvents and household cleaners, which dull the coated finish.",
+      "keywords": "canvas, coated canvas, fabric, dust, dirt, mark, stain, clean, cleaning, wipe, water, care, look after",
+      "ja": {
+        "title": "キャンバスの汚れはどのように落とせばよいですか？",
+        "answer": "キャンバスのほこりは、柔らかいブラシか乾いた布で払ってください。汚れが付いた場合は、水でごく軽く湿らせた布で拭き取り、風通しのよい場所で自然に乾かしてください。溶剤や家庭用洗剤はコーティングの艶を損ないますので、ご使用はお避けください。",
+        "keywords": "キャンバス, キャンバス地, コーティングキャンバス, コーテッドキャンバス, 生地, 布地, ほこり, ホコリ, 埃, 汚れ, 落とす, 落とし方, 落とせる, シミ, 染み, 跡, 掃除, 拭く, 拭き方, 水拭き, 水, ブラシ, 洗う, 洗える, 洗剤, 溶剤, お手入れ, 手入れ, ケア, ヴォヤージュ・トランク 110, キャビン・ケース 55"
+      }
+    },
+    {
+      "category": "care",
+      "productSlugs": ["voyage-trunk-110", "cabin-case-55"],
+      "title": "How should I store a trunk or hard case?",
+      "answer": "Keep it upright in a dry room, away from radiators and direct sun, and open it every few weeks to let it air. Wipe the brass fittings with a dry cloth. A soft patina on the brass is natural and part of the piece's character.",
+      "keywords": "trunk, hard case, suitcase, cabin case, store, storage, keep, humidity, damp, mould, mold, brass, fittings, corners, patina, tarnish, care",
+      "ja": {
+        "title": "トランクやハードケースは、どのように保管すればよいですか？",
+        "answer": "トランクやハードケースは、湿気の少ないお部屋に立てた状態で保管し、暖房器具や直射日光は避けてください。数週間に一度は開けて、中に風を通してください。真鍮の金具は、乾いた布で拭いてください。真鍮に生まれるやわらかなパティナ（経年による風合い）は自然なもので、お品物の個性の一部です。",
+        "keywords": "トランク, ハードケース, スーツケース, キャリーケース, ヴォヤージュ・トランク 110, キャビン・ケース 55, キャビンケース, 保管, 保管方法, 保管場所, 収納, しまい方, しまう, 使わないとき, 置き場所, 湿気, 湿度, カビ, 暖房, 真鍮, 金具, 角, コーナー, パティナ, 経年変化, くすみ, くすんだ, くすんで, 変色, 黒ずみ, 風通し, お手入れ, 手入れ, ケア"
+      }
+    },
+    {
+      "category": "materials",
+      "productSlugs": [],
+      "title": "What are Maison's pieces made of?",
+      "answer": "Our leather is full-grain calfskin, finished by hand, and it gains a sheen with use. Trunks and hard cases are coated canvas over a wooden frame, with solid brass fittings. Linings are cotton satin or suede, depending on the piece.",
+      "keywords": "material, materials, made of, leather, real leather, genuine, calfskin, full-grain, canvas, wood, wooden frame, brass, metal, lining, suede, cotton, satin",
+      "ja": {
+        "title": "Maisonの製品は、どのような素材でできていますか？",
+        "answer": "革は、手作業で仕上げたフルグレインのカーフスキンで、お使いになるほどに艶が増していきます。トランクとハードケースは、木枠にコーティングキャンバスを張り、無垢の真鍮金具を備えています。ライニング（内張り）は、お品物によって綿サテンまたはスエードです。",
+        "keywords": "素材, 使用素材, どんな素材, どんな革, 材質, 材料, 原材料, 本革, 本物, 合皮, 革, レザー, 天然皮革, カーフ, カーフスキン, 牛革, フルグレイン, キャンバス, コーティングキャンバス, 木, 木製, 木枠, フレーム, 真鍮, 金属, 金具, ライニング, 内張り, 内側, 内装, 裏地, 生地, スエード, スウェード, 綿, コットン, サテン, 綿サテン"
+      }
+    },
+    {
+      "category": "sizing",
+      "productSlugs": ["cabin-case-55"],
+      "title": "Will the Cabin Case 55 fit in an airline overhead bin?",
+      "answer": "The Cabin Case 55 measures 55 × 40 × 23 cm with its wheels and handle, which fits the cabin size most airlines allow, usually up to 55 × 40 × 25 cm. Airlines set their own limits, so please check yours before you fly.",
+      "keywords": "cabin, carry-on, carry on, hand luggage, overhead, bin, airline, plane, flight, fly, size, dimensions, fit, fits, allowed",
+      "ja": {
+        "title": "キャビン・ケース 55 は、機内の収納棚に入るサイズですか？",
+        "answer": "キャビン・ケース 55 のサイズは、キャスターとハンドルを含めて 55 × 40 × 23 cm です。多くの航空会社が機内持ち込みを認めているサイズ（通常は 55 × 40 × 25 cm まで）に収まります。規定は航空会社ごとに異なりますので、ご搭乗前にご利用の航空会社にてご確認ください。",
+        "keywords": "キャビン・ケース 55, キャビンケース, キャビン, 機内, 機内持ち込み, 持ち込み, 持ち込める, 手荷物, 機内手荷物, 収納棚, 荷物棚, 座席上, 頭上, 航空会社, 飛行機, フライト, 搭乗, サイズ, 寸法, 大きさ, 入る, 収まる, 規定, 制限, 許容サイズ, スーツケース, キャリーケース"
+      }
+    },
+    {
+      "category": "sizing",
+      "productSlugs": ["tote-soleil"],
+      "title": "Does the Tote Soleil fit a laptop?",
+      "answer": "The Tote Soleil measures 38 × 30 × 16 cm. It holds A4 documents and most 13-inch laptops, with an inner zip pocket for small things. A 15-inch laptop is a tight fit.",
+      "keywords": "tote, laptop, computer, macbook, a4, documents, work, office, size, dimensions, fit, fits, how big",
+      "ja": {
+        "title": "トート・ソレイユにノートパソコンは入りますか？",
+        "answer": "トート・ソレイユのサイズは 38 × 30 × 16 cm です。A4 サイズの書類が入り、13 インチのノートパソコンでしたらほとんどの機種が収まります。内側には小物用のジップポケットがございます。15 インチのノートパソコンは、入りますが余裕はほとんどございません。",
+        "keywords": "トート・ソレイユ, トート, トートバッグ, ソレイユ, ノートパソコン, パソコン, PC, ノートPC, ラップトップ, MacBook, マックブック, A4, 書類, 資料, 仕事, 通勤, ビジネス, オフィス, ジップポケット, ポケット, サイズ, 寸法, 大きさ, 入る, 収まる, 13インチ, 15インチ, インチ"
+      }
+    },
+    {
+      "category": "sizing",
+      "productSlugs": ["weekender-50"],
+      "title": "How much does the Weekender 50 hold?",
+      "answer": "The Weekender 50 measures 50 × 29 × 22 cm and holds clothes for two or three nights, a pair of shoes and a wash bag. Its shoulder strap detaches, so you can carry it by the handles.",
+      "keywords": "weekender, holdall, duffle, duffel, overnight, weekend, trip, nights, capacity, hold, how much, size, dimensions, how big, strap",
+      "ja": {
+        "title": "ウィークエンダー 50 には、どのくらい入りますか？",
+        "answer": "ウィークエンダー 50 のサイズは 50 × 29 × 22 cm で、2〜3 泊分のお着替えに加えて、靴 1 足と洗面ポーチが入ります。ショルダーストラップは取り外しができ、持ち手だけでもお使いいただけます。",
+        "keywords": "ウィークエンダー 50, ウィークエンダー, ボストンバッグ, ボストン, ダッフルバッグ, 旅行バッグ, 一泊, 1泊, 二泊, 2泊, 三泊, 3泊, 何泊, 泊, 週末, 小旅行, 旅行, 着替え, 容量, 入る, 収納, サイズ, 寸法, 大きさ, 荷物, ショルダーストラップ, ストラップ, ショルダー, 肩掛け, 取り外し, 外せる"
+      }
+    },
+    {
+      "category": "sizing",
+      "productSlugs": ["carnet-wallet", "card-case-quatre"],
+      "title": "How many cards do the wallet and card case hold?",
+      "answer": "The Carnet Wallet measures 19 × 10 cm and holds twelve cards, with a full-length pocket for notes. The Card Case Quatre measures 11 × 8 cm and has four pockets, for up to eight cards.",
+      "keywords": "wallet, card case, cards, how many, capacity, notes, bills, cash, slim, size, dimensions, fit",
+      "ja": {
+        "title": "財布とカードケースには、カードが何枚入りますか？",
+        "answer": "カルネ・ウォレットのサイズは 19 × 10 cm で、カードを 12 枚収納でき、横幅いっぱいの札入れがございます。カードケース・カトルのサイズは 11 × 8 cm で、4 つのポケットにカードを 8 枚まで収納できます。",
+        "keywords": "カルネ・ウォレット, ウォレット, 財布, お財布, 長財布, カードケース・カトル, カードケース, カード入れ, カード, 枚数, 何枚, 収納, 容量, 紙幣, お札, 札入れ, 現金, 薄型, 薄い, スリム, サイズ, 寸法, 大きさ, 入る"
+      }
+    },
+    {
+      "category": "sizing",
+      "productSlugs": ["watch-roll-trois"],
+      "title": "Will my watches fit in the Watch Roll Trois?",
+      "answer": "The Watch Roll Trois holds three watches, each on its own suede cushion, and suits cases up to 46 mm across. Rolled up, it measures 26 × 9 × 9 cm.",
+      "keywords": "watch, watches, watch roll, case size, mm, diameter, how many, three, travel, fit, size",
+      "ja": {
+        "title": "私の腕時計は、ウォッチロール・トロワに入りますか？",
+        "answer": "ウォッチロール・トロワには腕時計が 3 本入り、1 本ずつ専用のスエードのクッションに収まります。ケース径 46 mm までの時計に対応しています。巻いた状態でのサイズは 26 × 9 × 9 cm です。",
+        "keywords": "ウォッチロール・トロワ, ウォッチロール, トロワ, 時計, 腕時計, ウォッチ, 時計ケース, 時計入れ, ケース径, ケースサイズ, 直径, 径, mm, ミリ, 何本, 3本, 三本, 本数, 旅行, 持ち運び, 入る, 収まる, サイズ, 大きさ"
+      }
+    },
+    {
+      "category": "personalization",
+      "productSlugs": [],
+      "title": "Can I personalize a piece, and how long does it take?",
+      "answer": "Every piece can be personalized, but what you can choose and how long it takes depend on the piece. The options are hot-stamped initials, a monogram in your choice of color and hand-painted stripes. A piece's page shows the options it offers and how long its personalization takes. Personalized pieces can't be returned or exchanged.",
+      "keywords": "personalize, personalise, personalization, personalisation, custom, initials, monogram, engrave, engraving, emboss, embossing, stamp, hot stamp, letters, name, stripes, paint, painted, colour, color, how long, lead time, days",
+      "ja": {
+        "title": "名入れなどのパーソナライズはできますか？所要期間はどのくらいですか？",
+        "answer": "どのお品物もパーソナライズを承りますが、お選びいただける内容と所要期間はお品物によって異なります。パーソナライズの種類は、ホットスタンプによるイニシャル、お好きな色のモノグラム、手描きのストライプです。各お品物のページで、そのお品物でお受けできる内容と所要期間をご確認いただけます。なお、パーソナライズを施したお品物は、返品・交換をお受けいたしかねます。",
+        "keywords": "名入れ, 名前入れ, 名前, パーソナライズ, パーソナライズサービス, カスタム, カスタマイズ, オーダー, イニシャル, 頭文字, モノグラム, 刻印, 型押し, 箔押し, エンボス, ホットスタンプ, スタンプ, 文字, ストライプ, ペイント, 手描き, 色, カラー, 期間, 所要期間, 日数, 何日, 納期, 時間, かかる"
+      }
+    },
+    {
+      "category": "delivery",
+      "productSlugs": [],
+      "title": "Do you deliver, and can I collect in a boutique?",
+      "answer": "We deliver anywhere in Japan within 2 to 4 business days, free of charge, and you can collect any order at one of our boutiques instead. A personalized piece ships once its work is done. We don't ship outside Japan yet.",
+      "keywords": "delivery, deliver, shipping, ship, send, post, courier, arrive, arrival, how long, pick up, pickup, collect, collection, click and collect, abroad, overseas, international",
+      "ja": {
+        "title": "配送はお願いできますか？ブティックでの受け取りもできますか？",
+        "answer": "日本国内でしたらどこへでも、2〜4 営業日以内に送料無料でお届けいたします。配送の代わりに、どのご注文もいずれかのブティックでお受け取りいただけます。パーソナライズを施したお品物は、作業が完了してからの発送となります。なお、海外への発送はまだ承っておりません。",
+        "keywords": "配送, 配達, 発送, 宅配, 郵送, 送る, 送って, 届く, 届き, 届け, お届け, 到着, いつ届く, 何日, 日数, 営業日, 送料, 送料無料, 無料, 受け取り, 受取, 店頭受け取り, 店舗受け取り, 引き取り, 取りに行く, 海外, 海外発送, 海外配送, 国外, 国際配送, 国際"
+      }
+    },
+    {
+      "category": "returns",
+      "productSlugs": [],
+      "title": "Can I return or exchange a piece?",
+      "answer": "You can return or exchange an unused piece within 14 days of purchase, with its receipt, at any boutique. Personalized pieces can't be returned or exchanged.",
+      "keywords": "return, returning, refund, money back, exchange, swap, change, receipt, unused, wrong, mistake, changed my mind",
+      "ja": {
+        "title": "返品や交換はできますか？",
+        "answer": "ご購入から 14 日以内の未使用のお品物でしたら、レシートをお持ちのうえ、どのブティックでも返品・交換を承ります。なお、パーソナライズを施したお品物は、返品・交換をお受けいたしかねます。",
+        "keywords": "返品, 返却, 返す, 返金, 払い戻し, 交換, 取り替え, 取替え, 変更, レシート, 領収書, 未使用, 期限, 返品期限, 何日以内, 間違い, 間違えた, 気が変わった"
+      }
+    },
+    {
+      "category": "repairs",
+      "productSlugs": [],
+      "title": "Do you repair Maison pieces?",
+      "answer": "Our workshop repairs every Maison piece, for as long as you own it: stitching, handles, zips, wheels, corners and linings. Bring the piece to any boutique, and we'll give you a quote and a date before any work starts. Most repairs take two to four weeks.",
+      "keywords": "repair, repairs, fix, broken, broke, mend, stitching, seam, handle, zip, zipper, strap, wheel, wheels, corner, lining, restore, restoration, damaged",
+      "ja": {
+        "title": "Maisonの製品は修理していただけますか？",
+        "answer": "私どもの工房では、Maisonのすべてのお品物を、お手元にある限りいつまでも修理いたします。ステッチ、持ち手、ファスナー、キャスター、コーナー、ライニングまで承ります。お品物をいずれかのブティックにお持ちいただければ、作業を始める前にお見積もりと仕上がり予定日をお伝えいたします。ほとんどの修理は 2〜4 週間で仕上がります。",
+        "keywords": "修理, 修繕, 補修, お直し, 直す, 直して, リペア, 修復, 古い, 長年, 壊れた, 壊れ, 破損, 傷んだ, 故障, ほつれ, 縫い目, ステッチ, 縫製, 持ち手, ハンドル, ファスナー, ジッパー, ジップ, チャック, ストラップ, キャスター, 車輪, タイヤ, 角, コーナー, ライニング, 内張り, 受付, 受け付け, 見積もり, 見積り, 工房"
+      }
+    },
+    {
+      "category": "warranty",
+      "productSlugs": [],
+      "title": "Is there a warranty?",
+      "answer": "Every piece has a two-year warranty against defects in materials and workmanship, from the date of purchase. Wear, accidents and water damage aren't covered, but our workshop can repair them for a fee.",
+      "keywords": "warranty, guarantee, guaranteed, defect, defective, faulty, covered, cover, coverage, years, broken",
+      "ja": {
+        "title": "保証はありますか？",
+        "answer": "すべてのお品物に、ご購入日から 2 年間、素材および製造上の欠陥に対する保証がございます。使用による摩耗や、事故・水濡れによる損傷は保証の対象外となりますが、私どもの工房にて有償で修理を承ります。",
+        "keywords": "保証, 保証期間, 品質保証, 保証対象, ギャランティ, 補償, 欠陥, 不良, 不良品, 初期不良, 不具合, 故障, 壊れた, 対象, 対象外, 期間, 年数, 2年, 二年, 摩耗, 有償"
+      }
+    },
+    {
+      "category": "gifting",
+      "productSlugs": [],
+      "title": "Do you gift wrap?",
+      "answer": "Every purchase comes in a Maison box with a ribbon, free of charge, and we can add a handwritten card with your message. Ask for a gift receipt, which doesn't show the price.",
+      "keywords": "gift, gift wrap, gift wrapping, wrap, wrapping, box, ribbon, card, message, note, present, packaging, gift receipt",
+      "ja": {
+        "title": "ギフト包装はしていただけますか？",
+        "answer": "ご購入いただいたお品物はすべて、Maisonのボックスにリボンをおかけして、無料でお包みいたします。ご希望のメッセージを手書きしたカードをお添えすることもできます。価格の記載がないギフトレシートもご用意できますので、お申し付けください。",
+        "keywords": "ギフト, ギフト包装, ギフトラッピング, ラッピング, 包装, 包む, プレゼント, 贈り物, 贈答, 箱, ボックス, リボン, カード, メッセージカード, メッセージ, 手書き, パッケージ, ギフトレシート"
+      }
+    },
+    {
+      "category": "store",
+      "productSlugs": [],
+      "title": "Do I need an appointment to visit a boutique?",
+      "answer": "You can visit any boutique during its opening hours without an appointment. An appointment gives you a private consultation, with the pieces you chose ready to see, so it's the best way to see a piece that's usually in stock elsewhere.",
+      "keywords": "appointment, booking, walk in, walk-in, visit, visiting, consultation, private, without an appointment, boutique, store, shop",
+      "ja": {
+        "title": "ブティックへの来店に予約は必要ですか？",
+        "answer": "どのブティックも、営業時間中でしたらご予約なしでご来店いただけます。ご予約いただきますと、お選びいただいたお品物をご用意したうえで、プライベートなご相談のお時間をお取りいたします。そのため、普段はほかの店舗に在庫があるお品物をご覧になりたい場合は、ご予約いただくのが最適です。",
+        "keywords": "予約, ご予約, 来店予約, 来店, 訪問, 行く, 伺う, 予約なし, 予約不要, 飛び込み, 相談, 個別相談, 接客, プライベート, 営業時間, ブティック, 店舗, 店, お店, ショップ"
+      }
+    }
+  ]
+}

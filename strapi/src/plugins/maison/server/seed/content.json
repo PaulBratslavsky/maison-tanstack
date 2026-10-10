@@ -1,0 +1,103 @@
+{
+  "locales": [
+    { "code": "ja", "name": "Japanese (ja)" },
+    { "code": "en", "name": "English (en)" }
+  ],
+  "boutiques": [
+    {
+      "slug": "ginza",
+      "name": { "ja": "銀座本店", "en": "Ginza Flagship" },
+      "city": { "ja": "東京", "en": "Tokyo" },
+      "address": { "ja": "東京都中央区銀座 1-2-3（デモ）", "en": "1-2-3 Ginza, Chuo-ku, Tokyo (demo)" },
+      "openingHours": [
+        { "weekday": "mon", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "tue", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "wed", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "thu", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "fri", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "sat", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "sun", "opens": "11:00", "closes": "20:00" }
+      ],
+      "image": "boutique-ginza.jpg"
+    },
+    {
+      "slug": "omotesando",
+      "name": { "ja": "表参道店", "en": "Omotesando" },
+      "city": { "ja": "東京", "en": "Tokyo" },
+      "address": { "ja": "東京都渋谷区神宮前 4-5-6（デモ）", "en": "4-5-6 Jingumae, Shibuya-ku, Tokyo (demo)" },
+      "openingHours": [
+        { "weekday": "mon", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "tue", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "wed", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "thu", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "fri", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "sat", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "sun", "opens": "11:00", "closes": "20:00" }
+      ],
+      "image": "boutique-omotesando.jpg"
+    },
+    {
+      "slug": "osaka",
+      "name": { "ja": "大阪心斎橋店", "en": "Osaka Shinsaibashi" },
+      "city": { "ja": "大阪", "en": "Osaka" },
+      "address": { "ja": "大阪府大阪市中央区心斎橋筋 7-8-9（デモ）", "en": "7-8-9 Shinsaibashisuji, Chuo-ku, Osaka (demo)" },
+      "openingHours": [
+        { "weekday": "mon", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "wed", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "thu", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "fri", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "sat", "opens": "11:00", "closes": "20:00" },
+        { "weekday": "sun", "opens": "11:00", "closes": "20:00" }
+      ],
+      "image": "boutique-osaka.jpg"
+    }
+  ],
+  "collections": [
+    {
+      "slug": "voyage",
+      "name": { "ja": "ヴォヤージュ", "en": "Voyage" },
+      "story": { "ja": "旅の記憶を運ぶために。職人が一つひとつ手作業で仕上げるトランクとバッグ。", "en": "Made to carry the memory of a journey: trunks and bags finished by hand, one at a time." },
+      "image": "collection-voyage.jpg"
+    },
+    {
+      "slug": "atelier",
+      "name": { "ja": "アトリエ", "en": "Atelier" },
+      "story": { "ja": "毎日に寄り添うレザーグッズ。使うほどに手になじむ素材を選びました。", "en": "Leather goods for every day, in materials chosen to soften with use." },
+      "image": "collection-atelier.jpg"
+    },
+    {
+      "slug": "gifts",
+      "name": { "ja": "ギフト", "en": "Gifts" },
+      "story": { "ja": "大切な人へ贈る、小さな宝箱。イニシャルを入れて特別な一品に。", "en": "Small treasure boxes to give. Add initials to make each one personal." },
+      "image": "collection-gifts.jpg"
+    }
+  ],
+  "products": [
+    { "slug": "voyage-trunk-110", "sku": "MSN-VY-110", "collection": "voyage", "category": "trunk", "priceJpy": 2800000, "dimensionsCm": [110, 58, 55], "personalizable": true, "personalizationKinds": ["hand-painted-stripes", "initials-hot-stamp"], "personalizationLeadDays": 90, "giftOccasions": ["travel", "wedding"], "name": { "ja": "ヴォヤージュ・トランク 110", "en": "Voyage Trunk 110" }, "description": { "ja": "木枠にキャンバスを張り、真鍮の金具で仕上げた大型トランク。長い旅の相棒として、世代を超えて受け継がれます。", "en": "A large trunk of canvas over a wooden frame, finished with brass fittings. A companion for long journeys, made to be handed down." }, "craftStory": { "ja": "一台の完成までに、職人が約 300 時間をかけます。", "en": "Each trunk takes an artisan around 300 hours to complete." }, "image": "product-voyage-trunk-110.jpg" },
+    { "slug": "weekender-50", "sku": "MSN-VY-050", "collection": "voyage", "category": "travel", "priceJpy": 385000, "dimensionsCm": [50, 29, 22], "personalizable": true, "personalizationKinds": ["initials-hot-stamp"], "personalizationLeadDays": 3, "giftOccasions": ["travel", "birthday", "anniversary"], "name": { "ja": "ウィークエンダー 50", "en": "Weekender 50" }, "description": { "ja": "週末の旅にちょうどいいサイズのボストンバッグ。取り外し可能なショルダーストラップ付き。", "en": "A holdall sized for a weekend away, with a detachable shoulder strap." }, "craftStory": { "ja": "持ち手は一本の革から切り出し、手縫いで仕上げています。", "en": "The handles are cut from a single hide and stitched by hand." }, "image": "product-weekender-50.jpg" },
+    { "slug": "cabin-case-55", "sku": "MSN-VY-055", "collection": "voyage", "category": "trunk", "priceJpy": 690000, "dimensionsCm": [55, 40, 23], "personalizable": true, "personalizationKinds": ["monogram-color", "initials-hot-stamp"], "personalizationLeadDays": 14, "giftOccasions": ["travel", "new-job"], "name": { "ja": "キャビン・ケース 55", "en": "Cabin Case 55" }, "description": { "ja": "機内持ち込みサイズのハードケース。静音キャスターと伸縮ハンドルを備えています。", "en": "A carry-on hard case with silent wheels and a telescopic handle." }, "craftStory": { "ja": "角を守る真鍮のコーナーは、一つずつ手で打ち込みます。", "en": "The brass corner guards are set by hand, one by one." }, "image": "product-cabin-case-55.jpg" },
+    { "slug": "garment-carrier", "sku": "MSN-VY-GC1", "collection": "voyage", "category": "travel", "priceJpy": 248000, "dimensionsCm": [60, 105, 6], "personalizable": true, "personalizationKinds": ["initials-hot-stamp"], "personalizationLeadDays": 3, "giftOccasions": ["travel", "new-job"], "name": { "ja": "ガーメント・キャリア", "en": "Garment Carrier" }, "description": { "ja": "スーツやドレスをしわにせず運べる、二つ折りのガーメントケース。", "en": "A folding garment case that carries a suit or dress without creases." }, "craftStory": { "ja": "内側のライニングには、しわになりにくい綿サテンを使っています。", "en": "The lining is a cotton satin chosen to resist creasing." }, "image": "product-garment-carrier.jpg" },
+    { "slug": "tote-soleil", "sku": "MSN-AT-TS1", "collection": "atelier", "category": "bag", "priceJpy": 312000, "dimensionsCm": [38, 30, 16], "personalizable": true, "personalizationKinds": ["initials-hot-stamp"], "personalizationLeadDays": 3, "giftOccasions": ["birthday", "anniversary"], "name": { "ja": "トート・ソレイユ", "en": "Tote Soleil" }, "description": { "ja": "A4 サイズが入る、しなやかなレザートート。内側にジップポケット付き。", "en": "A supple leather tote that fits A4 documents, with an inner zip pocket." }, "craftStory": { "ja": "革の縁は七回塗り重ねて、なめらかに仕上げています。", "en": "The leather edges are painted seven times for a smooth finish." }, "image": "product-tote-soleil.jpg" },
+    { "slug": "coffret-mini", "sku": "MSN-AT-CM1", "collection": "atelier", "category": "bag", "priceJpy": 268000, "dimensionsCm": [20, 14, 8], "personalizable": true, "personalizationKinds": ["monogram-color"], "personalizationLeadDays": 14, "giftOccasions": ["anniversary", "birthday"], "name": { "ja": "コフレ・ミニ", "en": "Coffret Mini" }, "description": { "ja": "小さなトランクをかたどったハンドバッグ。チェーンストラップで肩掛けもできます。", "en": "A handbag shaped like a small trunk, with a chain strap to wear on the shoulder." }, "craftStory": { "ja": "留め金は、トランクと同じ工房で作られています。", "en": "Its clasp is made in the same workshop as the trunks." }, "image": "product-coffret-mini.jpg" },
+    { "slug": "carnet-wallet", "sku": "MSN-AT-CW1", "collection": "atelier", "category": "small-leather", "priceJpy": 98000, "dimensionsCm": [19, 10, 2], "personalizable": true, "personalizationKinds": ["initials-hot-stamp"], "personalizationLeadDays": 3, "giftOccasions": ["new-job", "birthday"], "name": { "ja": "カルネ・ウォレット", "en": "Carnet Wallet" }, "description": { "ja": "カード 12 枚と紙幣が収まる長財布。", "en": "A long wallet with room for twelve cards and notes." }, "craftStory": { "ja": "ステッチは 1 センチに 7 目、ほつれにくい手縫いです。", "en": "Hand-stitched at seven stitches per centimetre, so it won't unravel." }, "image": "product-carnet-wallet.jpg" },
+    { "slug": "card-case-quatre", "sku": "MSN-AT-CC4", "collection": "atelier", "category": "small-leather", "priceJpy": 52000, "dimensionsCm": [11, 8, 1], "personalizable": true, "personalizationKinds": ["initials-hot-stamp"], "personalizationLeadDays": 3, "giftOccasions": ["new-job"], "name": { "ja": "カードケース・カトル", "en": "Card Case Quatre" }, "description": { "ja": "4 つのポケットを備えた薄型カードケース。", "en": "A slim card case with four pockets." }, "craftStory": { "ja": "一枚革を折り曲げ、縫い目を最小限に抑えています。", "en": "Folded from a single piece of leather to keep seams to a minimum." }, "image": "product-card-case-quatre.jpg" },
+    { "slug": "watch-roll-trois", "sku": "MSN-EC-WR3", "collection": "gifts", "category": "objet", "priceJpy": 98000, "dimensionsCm": [26, 9, 9], "personalizable": true, "personalizationKinds": ["initials-hot-stamp"], "personalizationLeadDays": 3, "giftOccasions": ["travel", "anniversary"], "name": { "ja": "ウォッチロール・トロワ", "en": "Watch Roll Trois" }, "description": { "ja": "腕時計 3 本を守る、旅行用のウォッチロール。", "en": "A travel watch roll that protects three watches." }, "craftStory": { "ja": "内側には傷を防ぐスエードを張っています。", "en": "Lined with suede to keep watches from scratching." }, "image": "product-watch-roll-trois.jpg" },
+    { "slug": "jewelry-coffret", "sku": "MSN-EC-JC1", "collection": "gifts", "category": "objet", "priceJpy": 142000, "dimensionsCm": [22, 16, 9], "personalizable": true, "personalizationKinds": ["monogram-color"], "personalizationLeadDays": 14, "giftOccasions": ["wedding", "anniversary"], "name": { "ja": "ジュエリー・コフレ", "en": "Jewelry Coffret" }, "description": { "ja": "リングやイヤリングを整理できる、二段式のジュエリーボックス。", "en": "A two-tier jewelry box with space for rings and earrings." }, "craftStory": { "ja": "トレイは取り外して、旅先にも持ち出せます。", "en": "The tray lifts out so you can take it travelling." }, "image": "product-jewelry-coffret.jpg" },
+    { "slug": "passport-cover", "sku": "MSN-EC-PC1", "collection": "gifts", "category": "small-leather", "priceJpy": 64000, "dimensionsCm": [14, 10, 1], "personalizable": true, "personalizationKinds": ["initials-hot-stamp"], "personalizationLeadDays": 3, "giftOccasions": ["travel"], "name": { "ja": "パスポートカバー", "en": "Passport Cover" }, "description": { "ja": "パスポートと搭乗券を一緒に収められるカバー。", "en": "A cover that holds your passport and boarding pass together." }, "craftStory": { "ja": "表面は使い込むほどに艶が増すカーフレザーです。", "en": "Made of calfskin that gains a sheen with use." }, "image": "product-passport-cover.jpg" },
+    { "slug": "luggage-tag-duo", "sku": "MSN-EC-LT2", "collection": "gifts", "category": "objet", "priceJpy": 38000, "dimensionsCm": [11, 6, 1], "personalizable": true, "personalizationKinds": ["initials-hot-stamp"], "personalizationLeadDays": 3, "giftOccasions": ["travel", "new-job"], "name": { "ja": "ラゲッジタグ・デュオ", "en": "Luggage Tag Duo" }, "description": { "ja": "名前を隠せるフラップ付きのラゲッジタグ 2 個セット。", "en": "A set of two luggage tags with a flap that keeps your name private." }, "craftStory": { "ja": "ベルトの穴は一つずつ手で打ち抜いています。", "en": "Each strap hole is punched by hand." }, "image": "product-luggage-tag-duo.jpg" }
+  ],
+  "stock": {
+    "voyage-trunk-110": { "ginza": 1, "omotesando": 0, "osaka": 0 },
+    "weekender-50": { "ginza": 2, "omotesando": 1, "osaka": 0 },
+    "cabin-case-55": { "ginza": 1, "omotesando": 2, "osaka": 1 },
+    "garment-carrier": { "ginza": 3, "omotesando": 0, "osaka": 2 },
+    "tote-soleil": { "ginza": 4, "omotesando": 3, "osaka": 2 },
+    "coffret-mini": { "ginza": 2, "omotesando": 1, "osaka": 0 },
+    "carnet-wallet": { "ginza": 6, "omotesando": 5, "osaka": 4 },
+    "card-case-quatre": { "ginza": 8, "omotesando": 6, "osaka": 5 },
+    "watch-roll-trois": { "ginza": 3, "omotesando": 0, "osaka": 1 },
+    "jewelry-coffret": { "ginza": 1, "omotesando": 2, "osaka": 0 },
+    "passport-cover": { "ginza": 5, "omotesando": 4, "osaka": 3 },
+    "luggage-tag-duo": { "ginza": 10, "omotesando": 8, "osaka": 6 }
+  }
+}

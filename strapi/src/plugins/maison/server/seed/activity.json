@@ -1,0 +1,252 @@
+{
+  "customers": [
+    { "key": "aiko", "subject": "line:Udec0de00000000000000000000000001", "name": "Aiko T." },
+    { "key": "kenji", "subject": "line:Udec0de00000000000000000000000002", "name": "Kenji M." },
+    { "key": "sophie", "subject": "line:Udec0de00000000000000000000000003", "name": "Sophie L." },
+    { "key": "daniel", "subject": "line:Udec0de00000000000000000000000004", "name": "Daniel R." },
+    { "key": "mei", "subject": "line:Udec0de00000000000000000000000005", "name": "Mei W." }
+  ],
+  "appointments": [
+    {
+      "customer": "aiko",
+      "boutique": "ginza",
+      "pieces": ["jewelry-coffret"],
+      "daysAhead": 3,
+      "time": "14:00",
+      "language": "ja",
+      "createdVia": "concierge",
+      "note": "結婚記念日の贈り物を探しています。",
+      "confirmed": false,
+      "hoursAgo": 30
+    },
+    {
+      "customer": "kenji",
+      "boutique": "osaka",
+      "pieces": ["garment-carrier", "watch-roll-trois"],
+      "daysAhead": 5,
+      "time": "16:30",
+      "language": "ja",
+      "createdVia": "app",
+      "note": null,
+      "confirmed": true,
+      "hoursAgo": 54
+    },
+    {
+      "customer": "sophie",
+      "boutique": "omotesando",
+      "pieces": ["tote-soleil", "carnet-wallet"],
+      "daysAhead": 7,
+      "time": "11:30",
+      "language": "en",
+      "createdVia": "concierge",
+      "note": "I'd like to see the Tote Soleil next to the Carnet Wallet.",
+      "confirmed": false,
+      "hoursAgo": 9,
+      "owner": "you"
+    },
+    {
+      "customer": "daniel",
+      "boutique": "ginza",
+      "pieces": ["weekender-50"],
+      "daysAhead": 10,
+      "time": "18:00",
+      "language": "en",
+      "createdVia": "app",
+      "note": null,
+      "confirmed": true,
+      "hoursAgo": 70
+    },
+    {
+      "customer": "mei",
+      "boutique": "osaka",
+      "pieces": ["passport-cover", "luggage-tag-duo"],
+      "daysAhead": 12,
+      "time": "13:00",
+      "language": "en",
+      "createdVia": "concierge",
+      "note": null,
+      "confirmed": false,
+      "hoursAgo": 4
+    }
+  ],
+  "questions": [
+    {
+      "customer": "aiko",
+      "question": "ジュエリー・コフレの内側に、結婚記念日の日付を刻印していただくことはできますか？",
+      "reason": "no_answer",
+      "language": "ja",
+      "productSlug": "jewelry-coffret",
+      "status": "open",
+      "hoursAgo": 3,
+      "handOff": {
+        "reply": "ご質問ありがとうございます。クライアントアドバイザーがお調べのうえ、このLINEトークでご返信いたします。",
+        "labels": {
+          "kind": "question",
+          "sentimentScore": 0.1,
+          "answered": false,
+          "reason": "The customer asks whether a wedding date can be engraved inside the Jewelry Coffret. Product knowledge doesn't cover dates, so the concierge handed it to staff.",
+          "topic": "engraving a date"
+        }
+      }
+    },
+    {
+      "customer": "kenji",
+      "question": "ガーメント・キャリアは飛行機の機内に持ち込めますか？",
+      "reason": "no_answer",
+      "language": "ja",
+      "productSlug": "garment-carrier",
+      "status": "taken",
+      "staffName": "Yuki",
+      "takenHoursAgo": 64,
+      "hoursAgo": 66,
+      "handOff": {
+        "reply": "ご質問ありがとうございます。クライアントアドバイザーがお調べのうえ、このLINEトークでご返信いたします。",
+        "labels": {
+          "kind": "question",
+          "sentimentScore": 0,
+          "answered": false,
+          "reason": "The customer asks whether the Garment Carrier can be taken on board a plane. Product knowledge gives no cabin size for it, so the concierge handed it to staff.",
+          "topic": "cabin baggage"
+        }
+      }
+    },
+    {
+      "customer": "sophie",
+      "question": "Is there a wallet in the same leather and colour as the Tote Soleil, so the two match?",
+      "reason": "no_answer",
+      "language": "en",
+      "productSlug": "tote-soleil",
+      "status": "open",
+      "hoursAgo": 26,
+      "handOff": {
+        "reply": "Thank you for asking. One of Maison's client advisors will look into it and message you here on LINE with the answer.",
+        "labels": {
+          "kind": "question",
+          "sentimentScore": 0.15,
+          "answered": false,
+          "reason": "The customer wants a wallet that matches the Tote Soleil. The concierge had no answer and handed it to staff.",
+          "topic": "matching wallet"
+        }
+      },
+      "owner": "you"
+    },
+    {
+      "customer": "daniel",
+      "question": "Could I speak to someone? I'd like to order twelve Card Case Quatre with initials, as gifts for my team.",
+      "reason": "asked_for_person",
+      "language": "en",
+      "productSlug": "card-case-quatre",
+      "status": "open",
+      "hoursAgo": 14,
+      "handOff": {
+        "reply": "Of course. One of Maison's client advisors will message you here on LINE about your order.",
+        "labels": {
+          "kind": "question",
+          "sentimentScore": 0.1,
+          "answered": false,
+          "reason": "The customer asked to speak to a person about a gift order of twelve personalized card cases.",
+          "topic": "corporate gift order"
+        }
+      }
+    },
+    {
+      "customer": "mei",
+      "question": "Can each tag of the Luggage Tag Duo have different initials? One is for me and one for my husband.",
+      "reason": "no_answer",
+      "language": "en",
+      "productSlug": "luggage-tag-duo",
+      "status": "answered",
+      "staffName": "Hana",
+      "answer": "Yes, each tag can have its own initials. Hot-stamping takes about 3 days, so send us both sets of letters here and the tags will be ready for your visit to Osaka Shinsaibashi.",
+      "answeredHoursAgo": 41,
+      "hoursAgo": 46,
+      "handOff": {
+        "reply": "Thank you for asking. One of Maison's client advisors will look into it and message you here on LINE with the answer.",
+        "labels": {
+          "kind": "question",
+          "sentimentScore": 0.2,
+          "answered": false,
+          "reason": "The customer asks whether the two tags of the Luggage Tag Duo can carry different initials. The concierge had no answer and handed it to staff.",
+          "topic": "initials"
+        }
+      }
+    }
+  ],
+  "inquiries": [
+    {
+      "customer": "daniel",
+      "message": "The strap on my Weekender 50 is already fraying, and I've only had it two months. Not what I expect at this price.",
+      "reply": "I'm sorry to hear that. Every piece has a two-year warranty against defects in materials and workmanship, and our workshop repairs straps. Please bring the Weekender 50 to any boutique, and the team will look at it and give you a date.",
+      "language": "en",
+      "productSlug": "weekender-50",
+      "knowledgeFound": true,
+      "hoursAgo": 62,
+      "labels": {
+        "kind": "complaint",
+        "sentimentScore": -0.6,
+        "answered": true,
+        "reason": "The customer is unhappy that the Weekender 50's strap is fraying after two months. The concierge explained the warranty and the repair service.",
+        "topic": "strap repair"
+      },
+      "owner": "you"
+    },
+    {
+      "customer": "kenji",
+      "message": "土曜日に銀座本店へ伺いましたが、予約していたのに30分以上待たされました。残念です。",
+      "reply": "ご不便をおかけし、大変申し訳ございません。いただいたご意見は銀座本店のスタッフに伝えます。",
+      "language": "ja",
+      "productSlug": null,
+      "knowledgeFound": false,
+      "hoursAgo": 40,
+      "labels": {
+        "kind": "complaint",
+        "sentimentScore": -0.7,
+        "answered": false,
+        "reason": "The customer waited more than 30 minutes at Ginza on Saturday despite a booking. The concierge apologised and said it would pass this on.",
+        "topic": "waiting time"
+      }
+    },
+    {
+      "customer": "sophie",
+      "message": "Thank you! The Passport Cover I picked up at Omotesando is beautiful, and the staff were so kind.",
+      "reply": "Thank you for your kind words. I'll pass them on to the team at Omotesando.",
+      "language": "en",
+      "productSlug": "passport-cover",
+      "knowledgeFound": false,
+      "hoursAgo": 20,
+      "labels": {
+        "kind": "praise",
+        "sentimentScore": 0.9,
+        "answered": true,
+        "reason": "The customer thanks Maison for the Passport Cover and for the staff at Omotesando.",
+        "topic": "boutique service"
+      }
+    },
+    {
+      "customer": "mei",
+      "message": "How should I look after the leather on my Carnet Wallet?",
+      "reply": "Wipe the leather with a soft, dry cloth after use, and keep it away from direct sunlight and heat. If it gets wet, blot it gently and let it dry at room temperature, never with a hair dryer. Once or twice a year, any boutique can treat it with our neutral leather balm, free of charge.",
+      "language": "en",
+      "productSlug": "carnet-wallet",
+      "knowledgeFound": true,
+      "hoursAgo": 11,
+      "labels": {
+        "kind": "question",
+        "sentimentScore": 0.1,
+        "answered": true,
+        "reason": "The customer asks how to care for the leather of the Carnet Wallet. The concierge answered from product knowledge.",
+        "topic": "leather care"
+      }
+    },
+    {
+      "customer": "aiko",
+      "message": "先日、銀座本店で見せていただいたジュエリー・コフレがとても素敵でした。スタッフの方のご説明も丁寧で、また伺うのが楽しみです。",
+      "reply": "温かいお言葉をありがとうございます。銀座本店のスタッフにも伝えます。ご来店を心よりお待ちしております。",
+      "language": "ja",
+      "productSlug": "jewelry-coffret",
+      "knowledgeFound": false,
+      "hoursAgo": 1.5,
+      "labels": null
+    }
+  ]
+}
