@@ -11,6 +11,11 @@ import { nextWeekday } from './support';
 requireLocalMode();
 const strapiUrl = strapiOrigin();
 const clientId = process.env.VITE_MAISON_CLIENT_ID ?? '';
+/**
+ * A made-up demo customer's LINE user ID: U and 32 hex digits. These tests use the Udec0de... customers, and the browser
+ * tests (maison.spec.ts) use others, so no two files book for the same customer, whatever order they run in.
+ */
+const customer = (suffix: string) => `U${'dec0de'.repeat(5)}${suffix}`;
 const asAdmin = () => ({ Authorization: `Bearer ${process.env.MAISON_E2E_ADMIN_JWT}` });
 
 /** The next given weekday (0 = Sunday … 6 = Saturday) at least two days away, at `time` in Tokyo. */
@@ -72,8 +77,8 @@ const references = async (client: Client) =>
 
 test('my_appointments shows each customer only their own visits', async () => {
   // Customers of their own, apart from the browser tests' customers.
-  const alice = await signIn(`U${'d'.repeat(32)}`);
-  const bob = await signIn(`U${'e'.repeat(32)}`);
+  const alice = await signIn(customer('01'));
+  const bob = await signIn(customer('02'));
   const hers = await call(alice, 'request_appointment', { boutique: 'ginza', productSlugs: ['weekender-50'], requestedFor: visitOn(6, '14:00') });
   const his = await call(bob, 'request_appointment', { boutique: 'omotesando', productSlugs: ['tote-soleil'], requestedFor: visitOn(0, '15:00') });
   expect(await references(alice)).toEqual([hers.appointment.reference]);
@@ -83,7 +88,7 @@ test('my_appointments shows each customer only their own visits', async () => {
 });
 
 test("the Content Manager's appointment list never returns a customer, and its search never matches one", async () => {
-  const carol = await signIn(`U${'f'.repeat(32)}`);
+  const carol = await signIn(customer('03'));
   const booked = await call(carol, 'request_appointment', { boutique: 'ginza', productSlugs: ['passport-cover'], requestedFor: visitOn(6, '16:00') });
   await carol.close();
   const contentManager = `${strapiUrl}/content-manager`;
@@ -118,8 +123,8 @@ test("the Content Manager's appointment list never returns a customer, and its s
 test.describe('the REST API at /api/maison', () => {
   const rest = `${strapiUrl}/api/maison`;
   // Customers of their own, apart from every other test's: A books one visit (a customer may hold three open), B none.
-  const CUSTOMER_A = `U${'a'.repeat(32)}`;
-  const CUSTOMER_B = `U${'9'.repeat(32)}`;
+  const CUSTOMER_A = customer('04');
+  const CUSTOMER_B = customer('05');
   const bearer = (token: string) => ({ Authorization: `Bearer ${token}` });
 
   test('serves the catalog with no credentials: the Public role reads it', async () => {

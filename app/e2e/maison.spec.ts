@@ -316,9 +316,62 @@ test.describe('a phone in landscape', () => {
 });
 
 test('an address with no screen shows the not-found page, with a link back to the start', async ({ page }) => {
-  await page.goto('/no/such/place');
+  const response = await page.goto('/no/such/place');
+  expect(response?.status(), 'the HTTP status of an address with no screen').toBe(404);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^(Page not found|ページが見つかりません)$/);
   await page.getByRole('link', { name: /Back to the start|トップへ戻る/ }).click();
   await expect(page).toHaveURL(/^http:\/\/localhost:3004\/(\?.*)?$/);
   await expect(page.getByTestId('collection-card').first()).toBeVisible();
+});
+
+test("a product address in capitals still shows the piece: slugs are lower case", async ({ page }) => {
+  await page.goto('/products/WEEKENDER-50');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(WEEKENDER);
+  await expect(page.getByRole('button', { name: /Book a visit|来店を予約/ })).toBeVisible();
+});
+
+test('My visits with a made-up ref shows the list and no "Request sent" note', async ({ page }) => {
+  await page.goto('/visits?ref=not-a-real-reference');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^(My visits|ご来店予約)$/);
+  // Wait for the list's answer, whatever it holds, before checking that no note came with it.
+  await expect(page.getByText(/No visits yet|ご来店予約はまだありません/).or(page.getByTestId('visit').first())).toBeVisible();
+  await expect(page.getByText(/Request sent|リクエストを送りました/)).toHaveCount(0);
+});
+
+test('Home is never cached: GET / answers with Cache-Control no-store', async ({ request }) => {
+  const response = await request.get('/');
+  expect(response.status()).toBe(200);
+  expect(response.headers()['cache-control'] ?? '').toContain('no-store');
+});
+
+test.describe('one screen load makes one call per tool, as the agent view counts them', () => {
+  const agentCalls = (page: Page, tool: string) => page.getByTestId('agent-call').filter({ hasText: tool });
+
+  test('Home calls browse_collections once', async ({ page }) => {
+    const calls = toolCalls(page);
+    await page.goto('/');
+    await page.getByRole('switch', { name: /Agent view|エージェントビュー/ }).click();
+    await expect(page.getByTestId('collection-card').first()).toBeVisible();
+    // Let a repeat call, if there were one, come in before counting.
+    await settle(page);
+    await expect(page.getByTestId('agent-call')).toHaveCount(1);
+    await expect(agentCalls(page, 'browse_collections')).toHaveCount(1);
+    expect(namesOf(calls).filter((name) => name === 'browse_collections')).toHaveLength(1);
+  });
+
+  test('a collection calls browse_collections once and search_products once', async ({ page }) => {
+    const calls = toolCalls(page);
+    await page.goto('/');
+    await page.getByRole('switch', { name: /Agent view|エージェントビュー/ }).click();
+    await page.getByTestId('collection-card').first().click();
+    await expect(page.getByTestId('product-card').first()).toBeVisible();
+    await settle(page);
+    // The agent view lists the collection screen's own calls: Home's call is under Home.
+    await expect(page.getByTestId('agent-call')).toHaveCount(2);
+    await expect(agentCalls(page, 'browse_collections')).toHaveCount(1);
+    await expect(agentCalls(page, 'search_products')).toHaveCount(1);
+    // On the wire: Home's browse_collections and the collection screen's make two, and the one search_products is its own.
+    expect(namesOf(calls).filter((name) => name === 'browse_collections')).toHaveLength(2);
+    expect(namesOf(calls).filter((name) => name === 'search_products')).toHaveLength(1);
+  });
 });
