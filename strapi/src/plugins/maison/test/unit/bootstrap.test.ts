@@ -1,17 +1,22 @@
 import { describe, expect, it, vi } from 'vitest';
 import bootstrap from '../../server/src/bootstrap';
+import { answerCustomerSessionErrors } from '../../server/src/policies/customer-session';
 import { fakeStrapi } from './fake-strapi';
 
 /*
- * What bootstrap does with only the services: the labelling cron job and two warnings. Task 2D adds the RBAC actions
- * and the customer-session middleware, with their tests.
+ * What bootstrap does: the labelling cron job, two warnings about settings, the RBAC actions (admin-permissions.test.ts)
+ * and the customer-session error middleware (rest-routes.test.ts).
  */
 
 const LIFF = 'https://liff.line.me/1234567890-AbCdEfGh';
 
 /** Strapi after `bootstrap` ran, with `labelling` as the plugin's service of that name. */
 const bootstrapped = async (labelling: { sweep: () => Promise<unknown> }, config: Record<string, unknown> = { liffUrl: LIFF }) => {
-  const strapi = fakeStrapi({ services: { labelling }, config });
+  const strapi = {
+    ...fakeStrapi({ services: { labelling }, config }),
+    service: () => ({ actionProvider: { registerMany: vi.fn() } }),
+    server: { use: vi.fn() },
+  };
   await bootstrap({ strapi } as any);
   return strapi;
 };
@@ -93,5 +98,13 @@ describe('the demoLineUserId warning', () => {
     const strapi = await bootstrapped({ sweep: vi.fn() }, { demoLineUserId: 'nope' });
 
     expect(strapi.log.warn).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('the customer-session error middleware', () => {
+  it('is added to the server once, with its own function, so it sits inside Strapi\'s error middleware', async () => {
+    const strapi = await bootstrapped({ sweep: vi.fn() });
+
+    expect(strapi.server.use).toHaveBeenCalledExactlyOnceWith(answerCustomerSessionErrors);
   });
 });

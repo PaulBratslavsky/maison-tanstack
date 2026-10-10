@@ -1,11 +1,13 @@
 import bootstrap from './bootstrap';
 import config from './config';
 import contentTypes from './content-types';
+import controllers from './controllers';
+import policies from './policies';
 import register from './register';
+import routes from './routes';
 import services from './services';
 
-// The plugin's server entry. The config, the content types, the document middleware, the services and the bootstrap
-// work that needs only services are real so far. Each other part is added by a later task.
+// The plugin's server entry. The staff assistant routes and controller come in phase 6.
 export default {
   register,
   bootstrap,
@@ -13,8 +15,8 @@ export default {
   config,
   contentTypes,
   services,
-  controllers: {},
-  routes: [],
-  policies: {},
+  controllers,
+  routes,
+  policies,
   middlewares: {},
 };
