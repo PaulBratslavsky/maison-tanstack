@@ -1,1 +1,222 @@
 @import 'tailwindcss';
+
+/*
+ * The black-and-white design, from the approved mockup (ported from the original's tailwind.config.ts and
+ * app/globals.css). Fonts are self-hosted from @fontsource and imported in routes/__root.tsx, so nothing comes from a
+ * CDN: the app works inside LINE and offline on stage.
+ */
+
+@theme {
+  /* Colours. Rules and borders are hairline unless a class says ink. */
+  --color-paper: #ffffff;
+  --color-ink: #0a0a0a;
+  --color-graphite: #555555; /* secondary text */
+  --color-mist: #737373; /* captions: 4.6:1 on white */
+  --color-hairline: #e7e7e7; /* rules and borders */
+  --color-wash: #f4f4f4; /* image placeholders and quiet surfaces */
+  --color-error: #b42318; /* a readable red on white */
+
+  /*
+   * No rounded corners and no shadows: `rounded-none` and `shadow-none` are the only ones left, so a stray `rounded-lg`
+   * or `shadow-md` draws nothing. (The booking sheet's grab handle, the one rounded thing allowed, takes an arbitrary
+   * value.)
+   */
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+
+  /*
+   * Jost for everything Latin, Zen Kaku Gothic New for Japanese. There is no serif: `font-serif` draws nothing, so the
+   * text stays in Jost. The mono stack is for tool names and the agent view's log; Japanese in them takes the app's
+   * Japanese face.
+   */
+  --font-sans: 'Jost', 'Zen Kaku Gothic New', 'Hiragino Sans', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, 'Zen Kaku Gothic New', monospace;
+  --font-serif: initial;
+
+  /* Bold is Jost's 500, the heaviest weight the app loads: the browser's 700 would be a smeared, synthesized one. */
+  --font-weight-bold: 500;
+
+  /* The type scale, from the mockup: a size, then its line height, letter spacing and weight. */
+  --text-wordmark: 17px;
+  --text-wordmark--line-height: 1;
+  --text-wordmark--letter-spacing: 0.42em;
+  --text-wordmark--font-weight: 500;
+  /* The header's link and EN/JA. */
+  --text-nav: 11px;
+  --text-nav--line-height: 1.4;
+  --text-nav--letter-spacing: 0.14em;
+  /* Eyebrows and labels. */
+  --text-eyebrow: 11px;
+  --text-eyebrow--line-height: 1.4;
+  --text-eyebrow--letter-spacing: 0.18em;
+  --text-button: 12px;
+  --text-button--line-height: 1;
+  --text-button--letter-spacing: 0.2em;
+  --text-button--font-weight: 500;
+  --text-body: 14px;
+  --text-body--line-height: 1.6;
+  /* A product's name. */
+  --text-title: 24px;
+  --text-title--line-height: 1.25;
+  --text-title--letter-spacing: 0.01em;
+  --text-title--font-weight: 400;
+  /* A page's headline. */
+  --text-headline: 31px;
+  --text-headline--line-height: 1.15;
+  --text-headline--letter-spacing: -0.01em;
+  --text-headline--font-weight: 300;
+}
+
+/*
+ * The stage laptop: a wide screen with a mouse or trackpad, where the app sits in a phone-sized frame
+ * (components/phone-frame.tsx). A phone in landscape is wide too, but has no fine pointer, so it stays full screen.
+ */
+@custom-variant stage (@media (min-width: 500px) and (hover: hover) and (pointer: fine));
+
+/*
+ * A phone turned to landscape: at least 500 px wide, as the safe-area rule below has it, and under 500 px high. The
+ * concierge hides its suggestion row there once the conversation has begun, so the conversation gets the room. A phone
+ * held upright stays under 500 px wide, so its soft keyboard, which can leave a window wider than high, doesn't hide it.
+ * (The stage laptop is tall, and keeps it: a suggestion is a tap.)
+ */
+@custom-variant short (@media (orientation: landscape) and (min-width: 500px) and (max-height: 500px));
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Tailwind 4 draws borders in currentColor. Here a border is a hairline unless a class says ink. */
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-hairline);
+  }
+
+  /* Tailwind 4 leaves buttons with the default cursor. */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* Radios and checkboxes are ink too. On the stage laptop, the page around the phone frame is a neutral wash. */
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+    accent-color: var(--color-ink);
+  }
+
+  @media (min-width: 500px) and (hover: hover) and (pointer: fine) {
+    body {
+      @apply bg-wash;
+    }
+  }
+
+  b,
+  strong {
+    @apply font-medium;
+  }
+
+  /* A Japanese heading breaks between phrases, not inside a word: 店頭で stays whole. Where it's unknown, it breaks as before. */
+  :lang(ja) :is(h1, h2) {
+    word-break: auto-phrase;
+  }
+}
+
+/*
+ * LINE MINI App safe area (https://developers.line.biz/en/docs/line-mini-app/design/landscape/): 34px at the bottom in
+ * normal mode, and 44px on the left and right and 21px at the bottom in landscape mode. The app's frame and its fixed
+ * and sticky bars pad themselves with these. On the stage laptop the app sits in a phone-sized frame, with no notch.
+ * Landscape is also at least 500px wide: a phone upright is narrower, and a soft keyboard that shrinks its window into a
+ * landscape shape mustn't move the app sideways while the customer types (the `short` variant above too).
+ */
+:root {
+  --line-safe-x: 0px;
+  --line-safe-bottom: 34px;
+}
+
+@media (orientation: landscape) and (min-width: 500px) {
+  :root {
+    --line-safe-x: 44px;
+    --line-safe-bottom: 21px;
+  }
+}
+
+@media (min-width: 500px) and (hover: hover) and (pointer: fine) {
+  :root {
+    --line-safe-x: 0px;
+    --line-safe-bottom: 0px;
+  }
+}
+
+/* The design's shared styles, from the approved mockup. All of them are square; every tap target is at least 44 px. */
+@layer components {
+  /* The house's name, tracked wide, with as much space before it as the tracking leaves after it, so it centres. */
+  .wordmark {
+    @apply pl-[0.42em] text-wordmark uppercase;
+  }
+
+  /* The small line above a headline or a name: "Gifts, chosen with care", a product's collection. */
+  .eyebrow {
+    @apply text-eyebrow uppercase text-graphite;
+  }
+
+  /* A section's or a field's name: "Collections", "Boutique", "Day". */
+  .label {
+    @apply text-eyebrow font-medium uppercase text-ink;
+  }
+
+  .btn-primary {
+    @apply flex h-12 items-center justify-center gap-2 bg-ink px-6 text-center text-button uppercase text-paper disabled:cursor-not-allowed disabled:bg-hairline disabled:text-mist;
+  }
+
+  .btn-secondary {
+    @apply flex h-12 items-center justify-center gap-2 border border-ink bg-transparent px-6 text-center text-button uppercase text-ink disabled:cursor-not-allowed disabled:border-hairline disabled:text-mist;
+  }
+
+  /* A quiet action under a note: "Try again", "Back to the start". */
+  .btn-text {
+    @apply inline-flex min-h-[44px] items-center text-nav uppercase text-ink underline underline-offset-4;
+  }
+
+  /*
+   * A day or a time to pick. Selected, it's ink with white text: a toggle button (aria-pressed), an element with the
+   * radio role (aria-checked), or a label around a real radio.
+   */
+  .chip {
+    @apply flex min-h-[44px] flex-1 items-center justify-center border border-hairline bg-paper px-2 text-[13px] tabular-nums text-ink disabled:cursor-not-allowed disabled:bg-wash disabled:text-mist;
+  }
+
+  .chip[aria-pressed='true'],
+  .chip[aria-checked='true'] {
+    @apply border-ink bg-ink text-paper;
+  }
+
+  /* On its own: a browser without :has() drops the whole rule it's in, and the two above must stay. */
+  .chip:has(input:checked) {
+    @apply border-ink bg-ink text-paper;
+  }
+
+  .chip:has(input:disabled) {
+    @apply cursor-not-allowed bg-wash text-mist;
+  }
+
+  .chip:focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-ink;
+  }
+
+  .chip:has(input:focus-visible) {
+    @apply outline outline-2 outline-offset-2 outline-ink;
+  }
+
+  /*
+   * A text field: a 1 px ink underline, without the native rounding or inset shadow. Its text is 16 px: iOS zooms the
+   * page into a field whose text is smaller.
+   */
+  .field {
+    @apply block min-h-[44px] w-full appearance-none rounded-none border-0 border-b border-ink bg-transparent px-0 py-2 text-base text-ink outline-offset-4 placeholder:text-mist;
+  }
+}
