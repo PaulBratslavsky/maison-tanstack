@@ -7,7 +7,7 @@ The next session starts here. Newest entries at the bottom of each section.
 - Phase 0 (plan): done. `docs/plan.md`.
 - Phase 1 (scaffold): done, reviewed by Sonnet, one fix round (init-env: duplicate keys, the placeholder match, line endings, `KEY: value`).
 - Phase 2 (Maison plugin, back end): done. Tasks 2A to 2E, two Sonnet reviews (no correctness bugs in the plugin), one fix round (two restored tests, the `@strapi/utils` check before every start and before the integration suites, init-env line endings and multi-line quoted values, trimmed LINE values), a short re-review. Checks: 2020 plugin unit tests, 163 integration tests, 58 script tests, both typechecks. Merged into `main`.
-- Phase 3 (customer app, screens): in progress. 3A done (19 library files ported with tests: dates, copy, locale, booking, status, LINE links, QR, LIFF, session, browser MCP client, Home page fetch; 227 app tests). 3B running (screens).
+- Phase 3 (customer app, screens): in progress. 3A done (19 library files ported with tests: dates, copy, locale, booking, status, LINE links, QR, LIFF, session, browser MCP client, Home page fetch; 227 app tests). 3B done (design tokens, shell, Agent view, Home with a server function, Collection, Product, My visits, Visit detail, not-found, the booking sheet on TanStack Form; 244 app tests). Checked in the browser pane: Home in EN and JA (one MCP call per switch), product page, booking sheet defaults (Ginza, next Saturday, 14:00, Osaka not in stock), not-found. 3C running (Playwright).
 
 ## Rulings
 
@@ -47,6 +47,10 @@ Format: `Ruling: <what> - <why> - <cost if wrong>`.
 - Ruling: the app's server code reads `.env` values that are not `VITE_*` (`STRAPI_URL`, `ANTHROPIC_API_KEY`, `OLLAMA_*`) from `process.env`, which TanStack Start's Vite plugin fills with `loadEnv` in `vite dev` and `vite preview` (`@tanstack/start-plugin-core/dist/esm/vite/load-env-plugin/plugin.js`) - no extra wiring - a server started with plain `node dist/server/server.js` does not read `.env`; the host sets real variables (deployment notes).
 - Ruling: the app's tsconfig drops `noUncheckedIndexedAccess` - the original does not use it and the ported code gave 40 errors - array reads are not checked for undefined by the compiler.
 - Ruling: the mock-mode technical line joins its parts with ": " in place of an em dash - writing rules - none.
+- Ruling: screen data uses TanStack Query through `useTool` (key `['tool', screen, name, args]`, no retries, no refetch on focus, `gcTime` 5 s so one screen load makes one MCP call); a booking removes the `visits` queries - spec section 6.2 - a cached list could show for up to 5 s after leaving a screen.
+- Ruling: the QueryClient is made per router in `getRouter` and passed through router context - the TanStack Start pattern, one client per server request - none.
+- Ruling: links to `/concierge` are plain `<a>` until phase 4 adds the route - a typed `Link` to a missing route fails the typecheck - none.
+- Ruling: Playwright runs on the installed Google Chrome (`channel: 'chrome'`, a fresh temporary profile) - no 270 MB Chromium download - the tests follow whatever Chrome version this Mac has.
 - Ruling: `init-env` does not read multi-line quoted values - no `.env` here has one - a key inside such a value would count as present and not be added.
 
 ## Open with Paul
