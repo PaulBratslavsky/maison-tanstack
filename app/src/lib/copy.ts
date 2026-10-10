@@ -28,6 +28,8 @@ export const COPY = {
       alt: 'LINEでMaisonを開くQRコード',
     },
     backHome: 'トップへ戻る',
+    // An address the app has no screen for (the root route's notFoundComponent).
+    notFound: { title: 'ページが見つかりません', body: 'このアドレスには何もありません。' },
     chooseDate: '日付をお選びください。',
     dateTooSoon: '明日以降の日付をお選びください。',
     loading: '読み込み中…',
@@ -154,6 +156,7 @@ export const COPY = {
       alt: 'QR code that opens Maison in LINE',
     },
     backHome: 'Back to the start',
+    notFound: { title: 'Page not found', body: 'There is nothing at this address.' },
     chooseDate: 'Please choose a date.',
     dateTooSoon: 'Please choose a date from tomorrow on.',
     loading: 'Loading…',

@@ -16,3 +16,13 @@ describe("the visit picker's copy", () => {
     expect(COPY.ja.pieceSuggestions).toEqual(['名入れはできますか？', 'お手入れ方法を教えてください。', 'どのブティックに在庫がありますか？']);
   });
 });
+
+// The screen for an unknown address (the root route's notFoundComponent).
+describe("the not-found screen's copy", () => {
+  it('has a title and a line in both languages, and says where the link leads', () => {
+    expect(COPY.en.notFound).toEqual({ title: 'Page not found', body: 'There is nothing at this address.' });
+    expect(COPY.ja.notFound).toEqual({ title: 'ページが見つかりません', body: 'このアドレスには何もありません。' });
+    expect(COPY.en.backHome).toBe('Back to the start');
+    expect(COPY.ja.backHome).toBe('トップへ戻る');
+  });
+});
