@@ -9,29 +9,53 @@ import { z } from 'zod';
  * MCP server in the same process. Not imported by the app.
  */
 
-/** What the model does in one call: words, tool calls, or nothing. */
-export type Step = { words?: string; calls?: Array<{ id: string; name: string; input: unknown }> };
+/**
+ * What the model does in one call: words, tool calls, or nothing. `fail` ends the call with a RUN_ERROR as the adapters
+ * do when the provider fails (after the words, if there are any). `throws` makes the adapter throw. `stall` sends the
+ * words and then waits until the run is aborted, as a model that never finishes does. `pause` waits that many
+ * milliseconds before the first event.
+ */
+export type Step = { words?: string; calls?: Array<{ id: string; name: string; input: unknown }>; fail?: string; throws?: string; stall?: boolean; pause?: number };
 
 /** A text adapter that plays `steps`, one for each model call, as Claude's adapter would stream them. */
 export const scriptedModel = (steps: Step[]) => {
   let index = 0;
-  const requests: Array<{ messages: unknown[]; tools: Array<{ name: string }> }> = [];
+  const requests: Array<{ messages: unknown[]; tools: Array<{ name: string }>; modelOptions: unknown; systemPrompts: unknown[] }> = [];
   const adapter = {
     kind: 'text',
     name: 'scripted',
     model: 'scripted-model',
     '~types': {},
-    async *chatStream(options: { runId?: string; threadId?: string; messages: unknown[]; tools?: Array<{ name: string }> }): AsyncIterable<StreamChunk> {
-      requests.push({ messages: options.messages, tools: options.tools ?? [] });
+    async *chatStream(options: {
+      runId?: string;
+      threadId?: string;
+      messages: unknown[];
+      tools?: Array<{ name: string }>;
+      modelOptions?: unknown;
+      systemPrompts?: unknown[];
+      request?: { signal?: AbortSignal };
+    }): AsyncIterable<StreamChunk> {
+      requests.push({ messages: options.messages, tools: options.tools ?? [], modelOptions: options.modelOptions, systemPrompts: options.systemPrompts ?? [] });
       const step = steps[index++] ?? {};
       const runId = options.runId ?? `run-${index}`;
       const threadId = options.threadId ?? 'thread-1';
+      if (step.pause) await new Promise((resolve) => setTimeout(resolve, step.pause));
       yield { type: EventType.RUN_STARTED, runId, threadId, timestamp: Date.now() } as StreamChunk;
       if (step.words) {
         const messageId = `message-${index}`;
         yield { type: EventType.TEXT_MESSAGE_START, messageId, role: 'assistant', timestamp: Date.now() } as StreamChunk;
         yield { type: EventType.TEXT_MESSAGE_CONTENT, messageId, delta: step.words, timestamp: Date.now() } as StreamChunk;
         yield { type: EventType.TEXT_MESSAGE_END, messageId, timestamp: Date.now() } as StreamChunk;
+      }
+      if (step.throws) throw new Error(step.throws);
+      if (step.fail) {
+        yield { type: EventType.RUN_ERROR, message: step.fail, code: 'provider_error', runId, threadId, timestamp: Date.now() } as StreamChunk;
+        return;
+      }
+      if (step.stall) {
+        const signal = options.request?.signal;
+        await new Promise<void>((resolve) => (signal?.aborted ? resolve() : signal?.addEventListener('abort', () => resolve(), { once: true })));
+        return;
       }
       for (const [place, { id, name, input }] of (step.calls ?? []).entries()) {
         const args = JSON.stringify(input);
@@ -72,7 +96,15 @@ const SCHEMAS: Record<string, z.ZodRawShape> = {
   my_appointments: { locale },
   hand_off_to_staff: { question: z.string(), reason: z.enum(['no_answer', 'asked_for_person']), productSlug: z.string().optional(), locale },
   request_appointment: { boutique: z.string(), productSlugs: z.array(z.string()), requestedFor: z.string(), locale },
-  log_inquiry: { message: z.string(), reply: z.string(), knowledgeFound: z.boolean(), handedOff: z.boolean(), locale },
+  log_inquiry: {
+    message: z.string(),
+    reply: z.string(),
+    knowledgeFound: z.boolean(),
+    handedOff: z.boolean(),
+    questionReference: z.string().optional(),
+    productSlug: z.string().optional(),
+    locale,
+  },
 };
 
 /**

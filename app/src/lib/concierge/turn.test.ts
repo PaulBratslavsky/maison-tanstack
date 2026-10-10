@@ -461,6 +461,14 @@ describe("the picker's safety net", () => {
       expect(pickerPassBudget(56_000)).toEqual({ left: -1_000 });
     });
 
+    it('takes other limits when it is given them, for a test or a host with another route time', () => {
+      const limits = { budgetMs: 1_000, maxMs: 300, minMs: 100 };
+      expect(pickerPassBudget(0, limits)).toEqual({ ms: 300 });
+      expect(pickerPassBudget(800, limits)).toEqual({ ms: 200 });
+      expect(pickerPassBudget(950, limits)).toEqual({ left: 50 });
+      expect(pickerPassBudget(0, { maxMs: 4_000 })).toEqual({ ms: 4_000 }); // a limit it is not given stays as it was
+    });
+
     it('writes seconds for the log: 15 for 15000, 4.2 for 4200', () => {
       expect(secondsOf(15_000)).toBe(15);
       expect(secondsOf(4_200)).toBe(4.2);

@@ -71,6 +71,8 @@ export interface MaisonMcp {
   client: McpConnection;
   /** The tools the model is offered, in Strapi's order. */
   tools: McpServerTool[];
+  /** The name of every tool Strapi listed for this session, the hidden ones included: log_inquiry is there only when the token may call it. */
+  listed: string[];
   /** Closes the connection. The route does it when the request is over, always. */
   close: () => Promise<void>;
 }
@@ -85,7 +87,12 @@ export const openMcp = async ({ strapiUrl, authorization, createTransport = http
   try {
     const { tools } = await client.listTools();
     const hidden: readonly string[] = HIDDEN_TOOLS;
-    return { client, tools: tools.filter((tool) => !hidden.includes(tool.name)).map((tool) => asServerTool(client, tool)), close: () => client.close() };
+    return {
+      client,
+      tools: tools.filter((tool) => !hidden.includes(tool.name)).map((tool) => asServerTool(client, tool)),
+      listed: tools.map((tool) => tool.name),
+      close: () => client.close(),
+    };
   } catch (error) {
     await client.close().catch(() => {});
     throw error;

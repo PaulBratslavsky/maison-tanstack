@@ -283,13 +283,24 @@ export const needsPickerPass = ({
   !callsMyAppointments(turnParts) &&
   (piece !== null || [...earlierResultsOf(messages), ...toolResultsOf(turnParts)].some((result) => piecesFoundBy(result).length > 0));
 
+/** The limits of the extra pass's time. The defaults are the constants above. */
+export interface PickerPassLimits {
+  /** How long a turn may run, from the request's start. */
+  budgetMs?: number;
+  /** The most the pass may take. */
+  maxMs?: number;
+  /** The least the pass is worth starting with. */
+  minMs?: number;
+}
+
 /**
- * How long the extra pass may take: what is left of TURN_BUDGET_MS after `elapsedMs` since the request started,
- * PICKER_PASS_TIMEOUT_MS at most. Or what is left, when that is under PICKER_PASS_MIN_MS: the pass is then skipped.
+ * How long the extra pass may take: what is left of the turn's budget (TURN_BUDGET_MS) after `elapsedMs` since the request
+ * started, PICKER_PASS_TIMEOUT_MS at most. Or what is left, when that is under PICKER_PASS_MIN_MS: the pass is then skipped.
+ * `limits` replaces any of the three constants.
  */
-export const pickerPassBudget = (elapsedMs: number): { ms: number } | { left: number } => {
-  const left = TURN_BUDGET_MS - elapsedMs;
-  return left < PICKER_PASS_MIN_MS ? { left } : { ms: Math.min(PICKER_PASS_TIMEOUT_MS, left) };
+export const pickerPassBudget = (elapsedMs: number, { budgetMs = TURN_BUDGET_MS, maxMs = PICKER_PASS_TIMEOUT_MS, minMs = PICKER_PASS_MIN_MS }: PickerPassLimits = {}): { ms: number } | { left: number } => {
+  const left = budgetMs - elapsedMs;
+  return left < minMs ? { left } : { ms: Math.min(maxMs, left) };
 };
 
 /** Seconds, for the server's log: 15 for 15000, 4.2 for 4200. */

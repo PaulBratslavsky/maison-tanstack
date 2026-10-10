@@ -5,14 +5,8 @@
 import '@tanstack/react-start/server-only';
 
 import { COPY } from './copy';
+import { strapiOrigin } from './strapi-origin';
 import type { Locale } from './types';
-
-/**
- * Where the app's server reaches Strapi: STRAPI_URL, else Strapi's default address. Never VITE_STRAPI_URL, which in
- * LINE mode is the app's own public address, so a call to it would reach the app itself.
- */
-const strapiOrigin = (env: Record<string, string | undefined> = process.env) =>
-  (env.STRAPI_URL || 'http://127.0.0.1:1339').replace(/\/+$/, '');
 
 /** The Home page's words in one language. The intro is optional: null means Home shows none. */
 export interface HomeText {

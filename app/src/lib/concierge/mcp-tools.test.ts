@@ -94,6 +94,15 @@ describe("the customer's tools", () => {
     expect(mcp.tools.map((tool) => tool.name)).toEqual(['browse_collections', 'search_products', 'view_product', 'find_boutiques', 'search_knowledge', 'my_appointments', 'hand_off_to_staff']);
   });
 
+  it('lists the name of every tool Strapi offered, the hidden ones included, so the route knows whether log_inquiry is there', async () => {
+    const { mcp } = await session();
+    expect(mcp.listed).toContain('log_inquiry');
+    expect(mcp.listed).toContain('request_appointment');
+    expect(mcp.listed).toContain('search_products');
+    const without = await session({ tools: ['search_products'] });
+    expect(without.mcp.listed).toEqual(['search_products']);
+  });
+
   it("gives each tool Strapi's description and JSON Schema, as they are", async () => {
     const { mcp } = await session();
     const listed = (await mcp.client.listTools()).tools.find((tool) => tool.name === 'find_boutiques')!;
