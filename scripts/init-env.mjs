@@ -90,6 +90,30 @@ export function mergeEnv(existing, example, secrets = GENERATED) {
   return { text: lines.map((line) => line.text + line.eol).join(''), added, filled };
 }
 
+/**
+ * Sets KEY=value for each key in an existing .env text (or '' for none). Every line that sets the key takes the value,
+ * so whichever line a parser reads, it reads the new value. A missing key is added at the end. Every other line stays
+ * as it is, with its own line ending, and the new lines use the file's ending.
+ */
+export function setEnvValues(existing, values) {
+  const lines = linesOf(existing);
+  const eol = existing.includes('\r\n') ? '\r\n' : '\n';
+  for (const [key, value] of Object.entries(values)) {
+    let found = false;
+    for (const line of lines) {
+      const current = setting(line);
+      if (current?.key !== key) continue;
+      line.text = `${current.exported ? 'export ' : ''}${key}=${value}`;
+      found = true;
+    }
+    if (found) continue;
+    const last = lines.at(-1);
+    if (last && last.eol === '') last.eol = eol;
+    lines.push({ text: `${key}=${value}`, eol });
+  }
+  return lines.map((line) => line.text + line.eol).join('');
+}
+
 /** Creates or merges `<app>/.env` for each app that has a `.env.example`. */
 export function initEnv({ root, apps = ['strapi', 'app'], secrets = GENERATED, log = console.log }) {
   for (const app of apps) {
