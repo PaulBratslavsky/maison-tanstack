@@ -29,13 +29,18 @@ for (const file of BUNDLES) {
 
   const source = readFileSync(file, 'utf8');
 
+  // A package specifier of ours, in any quote.
+  const pkg = '["\'`](@tanstack\\/ai[^"\'`]*)["\'`]';
+  // Not anchored to the start of a line: a minifier puts many statements on one line, and writes `import{a}from"pkg"` with no spaces.
   const statics = [
     // CommonJS.
-    ...source.matchAll(/require\(\s*["'](@tanstack\/ai[^"']*)["']\s*\)/g),
-    // An import with bindings.
-    ...source.matchAll(/^\s*import\s[^;]*?from\s*["'](@tanstack\/ai[^"']*)["']/gm),
+    ...source.matchAll(new RegExp(`\\brequire\\s*\\(\\s*${pkg}\\s*\\)`, 'g')),
+    // An import with bindings, over any number of lines. `import(` is a dynamic import and `import.meta` is not an import.
+    ...source.matchAll(new RegExp(`\\bimport\\b(?!\\s*[(.])[^;"'\`()]*?\\bfrom\\s*${pkg}`, 'g')),
     // A bare import. When the bundler drops an unused binding it keeps `import "pkg";`, which still loads the module.
-    ...source.matchAll(/^\s*import\s*["'](@tanstack\/ai[^"']*)["']\s*(?:;\s*)?$/gm),
+    ...source.matchAll(new RegExp(`\\bimport\\s*${pkg}`, 'g')),
+    // A re-export, `export * from`, `export * as x from` or `export { a } from`: it loads the module as an import does.
+    ...source.matchAll(new RegExp(`\\bexport\\b[^;"'\`()]*?\\bfrom\\s*${pkg}`, 'g')),
   ].map((match) => match[1]);
 
   if (statics.length > 0) {
@@ -44,7 +49,7 @@ for (const file of BUNDLES) {
     continue;
   }
 
-  const dynamic = [...source.matchAll(/import\(\s*["'](@tanstack\/ai[^"']*)["']\s*\)/g)];
+  const dynamic = [...source.matchAll(new RegExp(`\\bimport\\s*\\(\\s*${pkg}\\s*\\)`, 'g'))];
   console.log(`  ok ${file}: no static load of @tanstack/ai (${dynamic.length} dynamic import site${dynamic.length === 1 ? '' : 's'})`);
 }
 

@@ -91,6 +91,19 @@ describe('scripts/check-esm-import.mjs', () => {
     ['an import with bindings', 'import { chat } from "@tanstack/ai";\n'],
     ['an import over several lines', 'import {\n  chat,\n  toolDefinition\n} from "@tanstack/ai";\n'],
     ['a bare import, which still loads the module', 'import "@tanstack/ai-anthropic";\n'],
+    ['a minified import with no spaces', 'import{chat}from"@tanstack/ai";\n'],
+    ['a minified default import', 'import chat from"@tanstack/ai";\n'],
+    ['a minified namespace import', 'import*as ai from"@tanstack/ai";\n'],
+    ['a minified bare import', 'import"@tanstack/ai-ollama";\n'],
+    ['an import after other code on the same line', 'var a=1;import{b}from"@tanstack/ai-anthropic";var c=2;\n'],
+    ['a re-export of names', 'export { chat } from "@tanstack/ai";\n'],
+    ['a re-export of everything', 'export * from "@tanstack/ai-anthropic";\n'],
+    ['a minified re-export of everything', 'export*from"@tanstack/ai";\n'],
+    ['a minified re-export of names', 'export{chat as c}from"@tanstack/ai-ollama";\n'],
+    ['a re-export as a namespace', 'export * as ai from "@tanstack/ai";\n'],
+    ['a re-export over several lines', 'export {\n  chat,\n  toolDefinition\n} from "@tanstack/ai";\n'],
+    ['a minified require', 'const a=require("@tanstack/ai");\n'],
+    ['a require with spaces and a template string', 'const a = require( `@tanstack/ai` );\n'],
   ])('fails a bundle with %s, and names the package', (_what, line) => {
     for (const sources of [
       { js: `${LOADS_DYNAMICALLY}${line}`, mjs: LOADS_DYNAMICALLY },
@@ -100,6 +113,35 @@ describe('scripts/check-esm-import.mjs', () => {
       expect(result.status).toBe(1);
       expect(result.output).toMatch(/loads the SDK statically: @tanstack\/ai/);
     }
+  });
+
+  it('passes a minified bundle that loads the packages only with import(), and counts the sites', () => {
+    const minified = 'async function a(){return await import("@tanstack/ai")}async function b(){return import("@tanstack/ai-anthropic")}export{a,b};\n';
+    const result = check({ js: minified, mjs: minified });
+    expect(result.status).toBe(0);
+    expect(result.output).toContain('index.js: no static load of @tanstack/ai (2 dynamic import sites)');
+  });
+
+  it('passes a bundle that exports without naming the packages, and one that imports other packages', () => {
+    const other = 'import{a}from"node:path";export{a};export*from"./other.js";export{b}from"@tanstack/virtual-core";\n';
+    expect(check({ js: other, mjs: other }).status).toBe(0);
+  });
+
+  describe('run against a small bundle on disk', () => {
+    const fixtures = fileURLToPath(new URL('../fixtures/esm-guard/', import.meta.url));
+    const run = (name: string) => spawnSync(process.execPath, [script, path.join(fixtures, name)], { encoding: 'utf8' });
+
+    it('exits non-zero for a bundle with a static import, and names the package', () => {
+      const result = run('static');
+      expect(result.status).toBe(1);
+      expect(`${result.stdout}${result.stderr}`).toMatch(/loads the SDK statically: @tanstack\/ai/);
+    });
+
+    it('exits zero for a bundle with a dynamic import only', () => {
+      const result = run('dynamic');
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain('no static load of @tanstack/ai (1 dynamic import site)');
+    });
   });
 
   it('fails when a bundle is missing, and says to build first', () => {
