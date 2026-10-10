@@ -8,7 +8,7 @@ The next session starts here. Newest entries at the bottom of each section.
 - Phase 1 (scaffold): done, reviewed by Sonnet, one fix round (init-env: duplicate keys, the placeholder match, line endings, `KEY: value`).
 - Phase 2 (Maison plugin, back end): done. Tasks 2A to 2E, two Sonnet reviews (no correctness bugs in the plugin), one fix round (two restored tests, the `@strapi/utils` check before every start and before the integration suites, init-env line endings and multi-line quoted values, trimmed LINE values), a short re-review. Checks: 2020 plugin unit tests, 163 integration tests, 58 script tests, both typechecks. Merged into `main`.
 - Phase 3 (customer app, screens): done. Tasks 3A to 3C, a Sonnet review (no rule broken), one fix round (double submit, `visits` cleared by the form, locale in the query key, server-only marker, the not-found comment, five new e2e checks and separate demo customers per spec), a short re-review. Checks: 249 app tests, 2020 plugin tests, 58 script tests, 23 Playwright tests passed and 1 skipped (needs `VITE_LINE_OA_ID`), both typechecks, the app build. Merged into `main`.
-- Phase 4 (concierge): in progress. 4A done (prompt, asksToVisit, resolve_date, turn facts, tool lines, picker rules, layout, chat text, Try again; 244 new tests; 493 app tests). 4B1 running (model choice, MCP tools as TanStack AI server tools, local tools).
+- Phase 4 (concierge): in progress. 4A done (prompt, asksToVisit, resolve_date, turn facts, tool lines, picker rules, layout, chat text, Try again; 244 new tests; 493 app tests). 4B1 done (model choice, MCP tools as server tools, locale and auto hand-off wrappers, resolve_date, choose_visit, the slug pre-check; 576 app tests). 4B2 running (the route).
 
 ## Rulings
 
@@ -17,7 +17,7 @@ Format: `Ruling: <what> - <why> - <cost if wrong>`.
 - Ruling: work happens in the git worktree `.claude/worktrees/mystifying-fermi-232239` on branch `claude/mystifying-fermi-232239`, merged into `main` at the end of each phase - the desktop app made the worktree for this session - a merge step per phase.
 - Ruling: the concierge wraps Strapi's MCP tools with its own code on `@modelcontextprotocol/sdk` 1.32, not `@tanstack/ai-mcp` 0.8.3 - `ai-mcp` throws a flat `Error` on `isError` and loses `{error:{code,message,hint}}`, which the chat's tool lines, prompt rule 6 and the auto hand-off read - about 50 lines of wrapper code that `ai-mcp` would have saved.
 - Ruling: the extra pass limits tools and forces `choose_visit` through a chat middleware `onConfig` (per-iteration `tools` and Anthropic `modelOptions.tool_choice`) - `chat()` 0.68 has no `activeTools` or `toolChoice` option - none known on Anthropic; on Ollama the call cannot be forced (open question 2).
-- Ruling: the `choose_visit` slug pre-check runs as an `onBeforeToolCall` middleware answering `skip` with Strapi's error - a `.client()` tool has no server execute to hold the check - if the hook does not fire for client tools, task 4.4 moves the check into a server wrapper.
+- Ruling: the `choose_visit` slug pre-check runs in a chat middleware's `onToolPhaseComplete` (app/src/lib/concierge/visit-check.ts): on Strapi's `not_found` it takes the call out of `needsClientExecution` and adds an error result, so the model sees the error and the browser never gets a waiting picker - `onBeforeToolCall` never runs for a client tool in 0.68 (`tools/tool-calls.js`, the `!tool.execute` branch continues first) - it relies on 0.68 internals; tests on the real `chat()` and `ChatClient` fail if an upgrade changes them.
 - Ruling: labelling passes `claude-haiku-4-5-20251001` to `createAnthropicChat` with one typed cast - the adapter's model list only has `claude-haiku-4-5` - a type error after an adapter upgrade.
 - Ruling: browser env names are `VITE_*` in place of `NEXT_PUBLIC_*` - Vite inlines only `VITE_*` into the client bundle - none; docs list the mapping.
 - Ruling: per-send token and locale go through `fetchServerSentEvents`'s async options function - `useChat`'s `body` is deprecated in ai-client 0.39 - none.
@@ -61,6 +61,8 @@ Format: `Ruling: <what> - <why> - <cost if wrong>`.
 - Ruling: a `choose_visit` call the server refused (the slug pre-check) counts as "no picker shown" - the model must fix the slug and call again - none.
 - Ruling: the original's `resumesOncePerAnswer` and `resumesAfterPicker` are not ported; 10 tests on the real `ChatClient` hold the once-per-answer rule instead - ai-client continues once by itself - none.
 - Ruling: the app's tsconfig `lib` is ES2024 - `findLast` and `String.prototype.isWellFormed` need it - none on Node 22.12 and current browsers.
+- Ruling: MCP tools are TanStack AI server tools with Strapi's plain JSON Schema as `inputSchema`; TanStack AI validates only Standard Schemas, so Strapi's own check answers bad input with `isError`, and the model sees the whole MCP result as JSON - `tools/tool-definition.d.ts`, `tools/tool-calls.js` - none, Strapi checks every input.
+- Ruling: the concierge route passes `debug: false` to `chat()` and drops an unanswered `choose_visit` call from history - the default logger prints error objects, and an open client call hangs the next turn - none.
 - Ruling: `init-env` does not read multi-line quoted values - no `.env` here has one - a key inside such a value would count as present and not be added.
 
 ## Open with Paul
