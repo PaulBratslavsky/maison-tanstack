@@ -1,16 +1,7 @@
-import { it, vi } from 'vitest';
+import { vi } from 'vitest';
 import { UID } from '../../server/src/constants';
+import lineConfirmations from '../../server/src/services/line-confirmations';
 import { fakeStrapi } from './fake-strapi';
-
-/**
- * The line-confirmations service comes with a later task. Until its file exists, the world has no sender, and the tests
- * that need the real one (`itWithSender`) are skipped. Once the file is there, they run, and the lookup below finds it.
- */
-const senderFiles = import.meta.glob<{ default: (context: { strapi: unknown }) => unknown }>('../../server/src/services/line-confirmations.ts', {
-  eager: true,
-});
-const lineConfirmations = Object.values(senderFiles)[0]?.default;
-export const itWithSender = lineConfirmations ? it : it.skip;
 
 type Doc = Record<string, any>;
 type Middleware = (ctx: Doc, next: () => Promise<unknown>) => Promise<unknown>;
@@ -123,8 +114,8 @@ export const world = ({
     transaction: async (callback: (params: { onCommit: (fn: () => unknown) => void }) => unknown) =>
       callback({ onCommit: (fn) => void commits.push(fn) }),
   };
-  const sender = lineConfirmations ? lineConfirmations({ strapi }) : undefined;
-  if (sender) services['line-confirmations'] = sender;
+  const sender = lineConfirmations({ strapi });
+  services['line-confirmations'] = sender;
 
   /** Each middleware in the order it was registered, then `work`, the call itself: Strapi's middleware manager. */
   const call = (ctx: { uid: string; action: string; params?: Doc }, work: () => Promise<unknown>) => {

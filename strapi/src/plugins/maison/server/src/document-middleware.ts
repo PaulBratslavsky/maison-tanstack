@@ -65,12 +65,9 @@ const publishedReferences = async (strapi: Core.Strapi, published: unknown, docu
 
 /** Sends each published appointment's LINE confirmation. A send that fails is logged, and the next one still goes. */
 const sendConfirmations = async (strapi: Core.Strapi, published: unknown, documentId: unknown) => {
-  // The line-confirmations service comes with a later task. Until it exists, a publish sends nothing. That task makes this lookup required.
-  const sender = strapi.plugin(PLUGIN_ID).service('line-confirmations') as { sendConfirmation(reference: string): Promise<unknown> } | undefined;
-  if (!sender) return;
   for (const reference of await publishedReferences(strapi, published, documentId)) {
     try {
-      await sender.sendConfirmation(reference);
+      await strapi.plugin(PLUGIN_ID).service('line-confirmations').sendConfirmation(reference);
     } catch (error) {
       strapi.log.error(`[maison] The LINE confirmation for ${reference} couldn't be sent: ${(error as Error)?.message ?? error}`);
     }

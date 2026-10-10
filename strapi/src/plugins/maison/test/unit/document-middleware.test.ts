@@ -1,13 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { UID } from '../../server/src/constants';
 import { registerDocumentMiddleware } from '../../server/src/document-middleware';
-import { itWithSender, lineAnswers, world } from './fake-line';
+import { lineAnswers, world } from './fake-line';
 
 /** What publish() resolves with: the document and its new published entries, one here, as appointments aren't localized. */
 const PUBLISH_RESULT = { documentId: 'doc-4821', entries: [{ id: 2, documentId: 'doc-4821', reference: 'APT-4821' }] };
 
 /** The world, with the plugin's document middlewares registered, as Strapi's register() does. */
-// The tests marked itWithSender use the real line-confirmations service, which a later task adds. They are skipped until it exists.
 const registered = (...args: Parameters<typeof world>) => {
   const w = world(...args);
   registerDocumentMiddleware(w.strapi);
@@ -26,7 +25,7 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('publishing an appointment', () => {
-  itWithSender('sends its LINE confirmation once, recorded as sent by strapi, and answers what the publish did', async () => {
+  it('sends its LINE confirmation once, recorded as sent by strapi, and answers what the publish did', async () => {
     const w = registered();
     expect(await publish(w)).toBe(PUBLISH_RESULT);
     expect(fetchMock).toHaveBeenCalledOnce();
@@ -36,7 +35,7 @@ describe('publishing an appointment', () => {
     );
   });
 
-  itWithSender('sends nothing when it is published again', async () => {
+  it('sends nothing when it is published again', async () => {
     const w = registered();
     await publish(w);
     expect(await publish(w)).toBe(PUBLISH_RESULT);
@@ -84,13 +83,6 @@ describe('publishing an appointment', () => {
     expect(sendConfirmation).not.toHaveBeenCalled();
   });
 
-  it('sends nothing, and logs nothing, while there is no line-confirmations service', async () => {
-    const w = registered();
-    delete w.services['line-confirmations'];
-    expect(await publish(w)).toBe(PUBLISH_RESULT);
-    expect(w.strapi.log.error).not.toHaveBeenCalled();
-  });
-
   it('sends nothing when nothing was published', async () => {
     const w = registered();
     const sendConfirmation = vi.fn();
@@ -104,7 +96,7 @@ describe('a publish that answers without the reference', () => {
   /** What publish() answers when it was asked for only some fields: the entry, without its reference. */
   const withoutReference = async () => ({ documentId: 'doc-4821', entries: [{ id: 2, documentId: 'doc-4821' }] });
 
-  itWithSender('has the reference read from the published version, and sends', async () => {
+  it('has the reference read from the published version, and sends', async () => {
     const w = registered();
     await publish(w, withoutReference);
     expect(w.appointmentFindOne).toHaveBeenCalledWith(
@@ -114,7 +106,7 @@ describe('a publish that answers without the reference', () => {
     expect(w.record).toHaveBeenCalledWith(expect.objectContaining({ reference: 'APT-4821', status: 'sent' }));
   });
 
-  itWithSender('logs a lookup that fails, and the publish still goes through', async () => {
+  it('logs a lookup that fails, and the publish still goes through', async () => {
     const w = registered();
     w.appointmentFindOne.mockRejectedValueOnce(new Error('database is down'));
     expect(await publish(w, withoutReference)).toEqual(await withoutReference());
@@ -123,7 +115,7 @@ describe('a publish that answers without the reference', () => {
     expect(w.strapi.log.error.mock.calls[0][0]).toMatch(/database is down/);
   });
 
-  itWithSender('logs a lookup that fails after the commit, and the commit sees no error', async () => {
+  it('logs a lookup that fails after the commit, and the commit sees no error', async () => {
     const w = registered({ inTransaction: true });
     w.appointmentFindOne.mockRejectedValueOnce(new Error('database is down'));
     await publish(w, withoutReference);
@@ -135,7 +127,7 @@ describe('a publish that answers without the reference', () => {
 });
 
 describe("publishing an appointment inside someone else's transaction, as the Content Manager's Publish does", () => {
-  itWithSender('sends nothing until the transaction commits, then sends once', async () => {
+  it('sends nothing until the transaction commits, then sends once', async () => {
     const w = registered({ inTransaction: true });
     expect(await publish(w)).toBe(PUBLISH_RESULT);
     expect(fetchMock).not.toHaveBeenCalled();
