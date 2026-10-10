@@ -6,7 +6,7 @@ The next session starts here. Newest entries at the bottom of each section.
 
 - Phase 0 (plan): done. `docs/plan.md`.
 - Phase 1 (scaffold): done, reviewed by Sonnet, one fix round (init-env: duplicate keys, the placeholder match, line endings, `KEY: value`).
-- Phase 2 (Maison plugin, back end): next.
+- Phase 2 (Maison plugin, back end): in progress. 2A done (skeleton, 19 domain files, seed data, config validator; 534 unit tests). 2B running (content types, Home page, document middleware, integration harness, the `@strapi/utils` check).
 
 ## Rulings
 
@@ -28,6 +28,8 @@ Format: `Ruling: <what> - <why> - <cost if wrong>`.
 - Ruling: Paul decided on 10 October that the extra pass runs on Ollama too, offering only `resolve_date` and `choose_visit`; Ollama cannot force the call, so the server logs when no picker came back - his decision - none.
 - Ruling: Paul decided on 10 October to merge each phase into `main` when it ends (fast-forward from this branch) - his decision - none.
 - Ruling: the Anthropic key was set in this worktree's `strapi/.env` (`AI_API_KEY`) and `app/.env` (`ANTHROPIC_API_KEY`) from the main checkout's files, at Paul's yes on 10 October, by a script that only fills an empty value and prints names only - his decision - none.
+- Ruling: the LINE flex message writes a hyphen, not an em dash, in an empty field - the project bans em dashes in strings, and LINE only needs a non-empty text node - a small visual difference from the original confirmation.
+- Ruling: `aiBaseUrl` is the Ollama host and `aiProvider` is `anthropic` or `ollama` (task 2A) - spec section 8 replaces OpenAI with Ollama - none.
 - Ruling: `init-env` does not read multi-line quoted values - no `.env` here has one - a key inside such a value would count as present and not be added.
 
 ## Open with Paul
