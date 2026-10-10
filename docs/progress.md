@@ -8,7 +8,7 @@ The next session starts here. Newest entries at the bottom of each section.
 - Phase 1 (scaffold): done, reviewed by Sonnet, one fix round (init-env: duplicate keys, the placeholder match, line endings, `KEY: value`).
 - Phase 2 (Maison plugin, back end): done. Tasks 2A to 2E, two Sonnet reviews (no correctness bugs in the plugin), one fix round (two restored tests, the `@strapi/utils` check before every start and before the integration suites, init-env line endings and multi-line quoted values, trimmed LINE values), a short re-review. Checks: 2020 plugin unit tests, 163 integration tests, 58 script tests, both typechecks. Merged into `main`.
 - Phase 3 (customer app, screens): done. Tasks 3A to 3C, a Sonnet review (no rule broken), one fix round (double submit, `visits` cleared by the form, locale in the query key, server-only marker, the not-found comment, five new e2e checks and separate demo customers per spec), a short re-review. Checks: 249 app tests, 2020 plugin tests, 58 script tests, 23 Playwright tests passed and 1 skipped (needs `VITE_LINE_OA_ID`), both typechecks, the app build. Merged into `main`.
-- Phase 4 (concierge): next.
+- Phase 4 (concierge): in progress. 4A running (pure rules on TanStack AI message parts).
 
 ## Rulings
 
@@ -54,6 +54,7 @@ Format: `Ruling: <what> - <why> - <cost if wrong>`.
 - Ruling: Playwright runs on the installed Google Chrome (`channel: 'chrome'`, a fresh temporary profile) - no 270 MB Chromium download - the tests follow whatever Chrome version this Mac has.
 - Ruling: server-only app modules start with `import '@tanstack/react-start/server-only'`, so a client import that is used fails the build (Start's import protection; `start-client-core/skills/start-core/execution-model/SKILL.md`, "Import Protection: File Markers") - the original used Next's `server-only` - an import that is never used is tree-shaken and does not fail.
 - Ruling: the booking form guards Send request with a ref set on the first tap, released after a refusal or failure and kept after a booking; the form itself clears the `visits` queries after a booking - TanStack Form's `onSubmit` runs only after its async checks, so two quick taps could both send - none.
+- Ruling: the concierge's chat rules read TanStack AI `tool-call` parts only (`id`, `name`, `input`, `state`, `output`). The stream processor copies each tool result onto its call as parsed `output` and sets `state` to `complete` or `error` (`@tanstack/ai` 0.68 `activities/chat/stream/processor.js`, `handleToolCallResultEvent`). AI SDK states map as `input-streaming` to `input-streaming`, `input-available` to `input-complete`, `output-available` to `complete`, `output-error` to `error`; there are no `step-start` parts - the original's rules read AI SDK parts - a TanStack AI upgrade that changes part shapes breaks the rules' tests first.
 - Ruling: `init-env` does not read multi-line quoted values - no `.env` here has one - a key inside such a value would count as present and not be added.
 
 ## Open with Paul
