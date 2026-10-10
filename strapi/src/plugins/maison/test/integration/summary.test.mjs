@@ -3,8 +3,9 @@ import { after, before, describe, it } from 'node:test';
 
 import { SUBJECT_A, SUBJECT_B, bootStrapi, tokyoDate, tokyoIso, tokyoTime } from './harness.mjs';
 
-// The service counts at NOW, when this file starts. The visits still ahead are 10, 20 and 30 days out, so the tests never
-// expire. The visits that are over were requested as if it were 2020. The admin route over this service comes with task 2D.
+// The service counts at NOW, when this file starts, and the admin route at the real clock a moment later. The visits
+// still ahead are 10, 20 and 30 days out, so both clocks see them ahead, and the tests never expire. The visits that
+// are over were requested as if it were 2020.
 const NOW = new Date();
 const LONG_AGO = new Date('2020-01-01T00:00:00Z');
 const BEFORE_EVERY_VISIT = new Date('2019-12-31T00:00:00Z');
@@ -14,6 +15,8 @@ const IN_20_DAYS = tokyoDate(20);
 const IN_30_DAYS = tokyoDate(30);
 const APPOINTMENT = 'plugin::maison.appointment';
 const NOTIFICATION = 'plugin::maison.notification';
+const REVIEW = 'plugin::maison.appointments.review';
+const CONFIRM = 'plugin::maison.appointments.confirm';
 const ROW_FIELDS = ['boutique', 'confirmationSent', 'createdAt', 'customer', 'demoCustomer', 'note', 'reference', 'requestedFor', 'status', 'yourLine'];
 /** A customer's LINE user ID: their subject without "line:". No staff surface ever shows it. */
 const lineUserIdOf = (subject) => subject.slice('line:'.length);
@@ -204,6 +207,100 @@ describe('the requests summary behind the admin homepage widget', () => {
       } finally {
         for (const { documentId } of created) await strapi.documents(NOTIFICATION).delete({ documentId });
       }
+    });
+  });
+
+  describe('GET /maison/appointments/summary', () => {
+    let baseUrl;
+    let reviewer;
+    let confirmer;
+
+    /** One request to the admin route. Tokens are sent, never logged. */
+    const get = async (path, token) => {
+      const response = await fetch(new URL(path, baseUrl), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      return { status: response.status, body: await response.json().catch(() => null) };
+    };
+
+    /**
+     * An admin whose role holds `actions`, signed in the way the admin panel's login does it: a session, then an
+     * access token. The account has no password, and exists only in this test's throwaway database.
+     */
+    const adminWith = async (name, actions) => {
+      const roles = strapi.service('admin::role');
+      const role = await roles.create({ name: `Maison test: ${name}`, description: 'Created by the Maison integration tests' });
+      await roles.assignPermissions(role.id, actions.map((action) => ({ action, subject: null, properties: {}, conditions: [] })));
+      const user = await strapi.service('admin::user').create({
+        email: `${name}@maison.test`, firstname: name, lastname: 'Test', isActive: true, roles: [role.id],
+      });
+      const sessions = strapi.sessionManager('admin');
+      const { token: refreshToken } = await sessions.generateRefreshToken(String(user.id), `maison-test-${name}`, { type: 'session' });
+      const { token } = await sessions.generateAccessToken(refreshToken);
+      return token;
+    };
+
+    before(async () => {
+      // Requests of its own, so this passes on its own too: three wait for staff, two are confirmed and ahead, and LINE
+      // has confirmed one of those. One more, confirmed and sent in 2020, is over and the oldest, so it shows nowhere.
+      await strapi.plugin('maison').service('seed').resetDemoAppointments();
+      await request('pastSentB', {
+        subject: SUBJECT_B, boutique: 'omotesando', productSlugs: ['passport-cover'], requestedFor: '2020-01-05T15:00:00+09:00', now: LONG_AGO,
+      });
+      await confirm('pastSentB', new Date('2020-01-02T00:00:00Z'));
+      await sendConfirmation('pastSentB');
+      await request('waitingA', { requestedFor: tokyoTime(IN_10_DAYS, '12:00') });
+      await request('waitingB', { subject: SUBJECT_B, boutique: 'omotesando', productSlugs: ['passport-cover'], requestedFor: tokyoTime(IN_20_DAYS, '12:00') });
+      await request('confirmedB', { subject: SUBJECT_B, requestedFor: tokyoTime(IN_20_DAYS, '13:00') });
+      await confirm('confirmedB');
+      await request('sentA', { requestedFor: tokyoTime(IN_30_DAYS, '13:00') });
+      await confirm('sentA');
+      await sendConfirmation('sentA');
+      await request('waitingA2', { requestedFor: tokyoTime(IN_30_DAYS, '15:00'), note: 'Window seat, please' });
+
+      reviewer = await adminWith('reviewer', [REVIEW]);
+      confirmer = await adminWith('confirmer', [CONFIRM]); // holds a Maison permission, but not the one for reviewing
+      await new Promise((resolve, reject) => {
+        strapi.server.listen(0, '127.0.0.1', resolve).once('error', reject);
+      });
+      baseUrl = `http://127.0.0.1:${strapi.server.httpServer.address().port}`;
+    });
+
+    it('refuses a caller who is not signed in to the admin', async () => {
+      assert.equal((await get('/maison/appointments/summary')).status, 401);
+      assert.equal((await get('/maison/appointments/summary', 'not-a-session')).status, 401);
+    });
+
+    it('answers 403 to an admin whose role lacks appointments.review, whatever else it holds', async () => {
+      const { status, body } = await get('/maison/appointments/summary', confirmer);
+      assert.equal(status, 403);
+      assert.equal(body.data, null);
+      assert.ok(!('counts' in body) && !('recent' in body), 'nothing of the summary');
+    });
+
+    it('answers an admin with appointments.review the counts and the five newest requests', async () => {
+      const { status, body } = await get('/maison/appointments/summary', reviewer);
+      assert.equal(status, 200, JSON.stringify(body));
+      assert.deepEqual(body.counts, { waitingForStaff: 3, confirmedUpcoming: 2, confirmationsSent: 1 });
+      assert.deepEqual(body.recent.map((row) => row.reference), [refs.waitingA2, refs.sentA, refs.confirmedB, refs.waitingB, refs.waitingA]);
+      assert.deepEqual(
+        body.recent.map((row) => [row.status, row.confirmationSent]),
+        [['requested', false], ['confirmed', true], ['confirmed', false], ['requested', false], ['requested', false]]
+      );
+      assert.deepEqual(body.recent[0].boutique, { slug: 'ginza', name: '銀座本店' });
+      assert.deepEqual(body.recent.map((row) => row.customer), ['line:Uaaa…aa', 'line:Uaaa…aa', 'line:Ubbb…bb', 'line:Ubbb…bb', 'line:Uaaa…aa']);
+      for (const row of body.recent) assert.deepEqual(Object.keys(row).sort(), ROW_FIELDS);
+      assert.deepEqual(body.recent.map((row) => row.note), ['Window seat, please', '', '', '', ''], "each request's note, as the customer left it");
+      for (const row of body.recent) assert.equal(row.createdAt, await createdAtOf(row.reference), `${row.reference}: the time its request came in`);
+      const text = JSON.stringify(body);
+      for (const [who, subject] of [["A's", SUBJECT_A], ["B's", SUBJECT_B]]) assert.ok(!text.includes(lineUserIdOf(subject)), `never ${who} LINE user ID`);
+    });
+
+    it('is not taken for an appointment reference, and leaves the board route alone', async () => {
+      const board = await get('/maison/appointments?status=all', reviewer);
+      assert.equal(board.status, 200);
+      assert.ok(Array.isArray(board.body.appointments));
+      const summary = await get('/maison/appointments/summary', reviewer);
+      assert.equal(summary.status, 200);
+      assert.ok(!('appointments' in summary.body), "the summary, not the board's list");
     });
   });
 });

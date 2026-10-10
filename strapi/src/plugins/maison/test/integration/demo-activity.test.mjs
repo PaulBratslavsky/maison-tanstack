@@ -295,105 +295,141 @@ describe('Load demo activity', () => {
     assert.ok(await strapi.documents(INQUIRY).findOne({ documentId: own.inquiry }));
   });
 
-  describe('through the services the admin routes call', () => {
+  describe('over the admin routes', () => {
+    let baseUrl;
     let staff;
-    let appointmentsService;
-    let questionsService;
-    let inquiriesService;
+    let reviewer;
 
-    /** Every answer a service gave in this suite, to check none of them carries a full LINE user ID. */
+    /** Every answer an admin route gave in this suite, to check none of them carries a full LINE user ID. */
     const answers = [];
-    const seen = (what, answer) => {
-      answers.push({ path: what, text: JSON.stringify(answer) });
-      return answer;
+
+    /** One request to an admin route, with a JSON body when given one. Tokens are sent, never logged. */
+    const call = async (method, path, token, body) => {
+      const headers = { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) };
+      const response = await fetch(new URL(path, baseUrl), { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
+      const text = await response.text();
+      answers.push({ path, text });
+      return { status: response.status, text, body: JSON.parse(text || 'null') };
     };
 
     /** The pushes the LINE stand-in received, as `to` (whose user ID) and the kind of message. */
     const pushes = () => line.requests.filter((request) => request.method === 'POST').map((request) => ({ to: request.body.to, type: request.body.messages[0].type }));
 
-    /** The staff views the board and the two tabs list, as the routes list them. */
-    const boardRows = async () => seen('appointments', (await appointmentsService.listRequests({ status: 'all', limit: 50 })).value);
-    const questionRows = async (status = 'all') => seen(`questions ${status}`, (await questionsService.list({ status, limit: 100 })).value);
-    const inquiryRows = async (filter = 'all') => seen(`inquiries ${filter}`, (await inquiriesService.list({ filter, limit: 100 })).value);
+    /** An admin whose role holds `actions`, signed in the way the admin panel's login does it. No password, in this test's database only. */
+    const adminWith = async (name, actions) => {
+      const roles = strapi.service('admin::role');
+      const role = await roles.create({ name: `Maison test: ${name}`, description: 'Created by the Maison integration tests' });
+      await roles.assignPermissions(role.id, actions.map((action) => ({ action, subject: null, properties: {}, conditions: [] })));
+      const user = await strapi.service('admin::user').create({ email: `${name}@maison.test`, firstname: name, lastname: 'Test', isActive: true, roles: [role.id] });
+      const sessions = strapi.sessionManager('admin');
+      const { token: refreshToken } = await sessions.generateRefreshToken(String(user.id), `maison-test-${name}`, { type: 'session' });
+      return (await sessions.generateAccessToken(refreshToken)).token;
+    };
 
-    before(() => {
-      // Staff speak for Maison's client advisor team here, as an admin with no first name does.
-      staff = null;
-      appointmentsService = strapi.plugin('maison').service('appointments');
-      questionsService = strapi.plugin('maison').service('questions');
-      inquiriesService = strapi.plugin('maison').service('inquiries');
+    before(async () => {
+      staff = await adminWith('demo-staff', [
+        'plugin::maison.demo.manage',
+        'plugin::maison.appointments.review',
+        'plugin::maison.appointments.confirm',
+        'plugin::maison.questions.read',
+        'plugin::maison.questions.answer',
+        'plugin::maison.inquiries.view',
+        'plugin::maison.inquiries.reply',
+      ]);
+      reviewer = await adminWith('demo-reviewer', ['plugin::maison.appointments.review']);
+      await new Promise((resolve, reject) => {
+        strapi.server.listen(0, '127.0.0.1', resolve).once('error', reject);
+      });
+      baseUrl = `http://127.0.0.1:${strapi.server.httpServer.address().port}`;
     });
 
-    it('answers at once that it is all there, and starts nothing, when the demo activity is already loaded', async () => {
-      assert.deepEqual(await seed.startDemoActivity(), { ok: true, value: { started: false, result: NOTHING } });
+    it('POST /maison/demo/activity answers an admin who may manage the demo data, and nobody else', async () => {
+      assert.equal((await call('POST', '/maison/demo/activity')).status, 401);
+      assert.equal((await call('POST', '/maison/demo/activity', reviewer)).status, 403);
+      const { status, body } = await call('POST', '/maison/demo/activity', staff);
+      assert.equal(status, 200);
+      assert.deepEqual(body, NOTHING, 'already there');
     });
 
     it('never shows a full LINE user ID in the requests, questions or inquiries, and lists show when each came in', async () => {
-      const lists = { appointments: await boardRows(), questions: await questionRows(), inquiries: await inquiryRows() };
-      for (const [key, rows] of Object.entries(lists)) {
-        const demo = rows.filter((row) => isDemo(row.customer));
-        assert.ok(demo.length >= 5, `${key} lists the demo rows`);
-        assert.doesNotMatch(JSON.stringify(rows), LINE_USER_ID, `${key} masks every customer`);
+      const lists = {
+        '/maison/appointments?status=all&limit=50': 'appointments',
+        '/maison/questions?status=all&limit=100': 'questions',
+        '/maison/inquiries?filter=all&limit=100': 'inquiries',
+      };
+      for (const [path, key] of Object.entries(lists)) {
+        const { status, text, body } = await call('GET', path, staff);
+        assert.equal(status, 200, path);
+        const demo = body[key].filter((row) => isDemo(row.customer));
+        assert.ok(demo.length >= 5, `${path} lists the demo rows`);
+        assert.doesNotMatch(text, LINE_USER_ID, `${path} masks every customer`);
         // Without demoLineUserId, no row is yours: the label is shown only for the account the setting names.
-        assert.deepEqual(rows.filter((row) => row.yourLine !== false), [], `${key}: yourLine is false on every row`);
+        assert.deepEqual(body[key].filter((row) => row.yourLine !== false), [], `${path}: yourLine is false on every row`);
         const times = demo.map((row) => Date.parse(row.createdAt));
-        assert.ok(Math.max(...times) - Math.min(...times) >= 24 * HOUR_MS, `${key}: received over more than a day`);
-        assert.ok(times.every((time) => time > loadedAt.getTime() - 3 * DAY_MS), `${key}: within the last three days`);
+        assert.ok(Math.max(...times) - Math.min(...times) >= 24 * HOUR_MS, `${path}: received over more than a day`);
+        assert.ok(times.every((time) => time > loadedAt.getTime() - 3 * DAY_MS), `${path}: within the last three days`);
       }
     });
 
     it("makes no LINE call for a made-up customer on Confirm, Send again, Let them know, Answer or Reply, and records demo", async () => {
       line.requests.length = 0;
-      const board = await boardRows();
-      const waiting = board.find((row) => isDemo(row.customer) && row.status === 'requested');
-      const confirmedRow = await appointmentsService.confirm(waiting.reference);
-      assert.equal(confirmedRow.ok, true, JSON.stringify(confirmedRow));
-      assert.equal(confirmedRow.value.appointment.confirmationSent, false);
-      assert.equal(confirmedRow.value.appointment.demoCustomer, true);
+      const { body: board } = await call('GET', '/maison/appointments?status=all&limit=50', staff);
+      const waiting = board.appointments.find((row) => isDemo(row.customer) && row.status === 'requested');
+      const confirmedRow = await call('POST', `/maison/appointments/${waiting.reference}/confirm`, staff);
+      assert.equal(confirmedRow.status, 200, confirmedRow.text);
+      assert.equal(confirmedRow.body.appointment.confirmationSent, false);
+      assert.equal(confirmedRow.body.appointment.demoCustomer, true);
       const [notification] = await strapi.documents(NOTIFICATION).findMany({ filters: { appointmentReference: { $eq: waiting.reference } } });
       assert.deepEqual([notification.outcome, notification.detail], ['demo', 'Demo customer: no LINE message']);
 
-      const again = await strapi.plugin('maison').service('line-confirmations').sendConfirmation(waiting.reference);
-      assert.equal(again.status, 'demo');
+      const again = await call('POST', `/maison/appointments/${waiting.reference}/notify`, staff);
+      assert.equal(again.status, 200, again.text);
+      assert.equal(again.body.status, 'demo');
 
-      const open = await questionRows('open');
-      const toNotify = open.find((row) => isDemo(row.customer) && row.status === 'open');
-      const notified = await questionsService.notify(toNotify.reference, staff);
-      assert.deepEqual([notified.status, notified.message], ['demo', `Marked ${toNotify.reference} taken. Demo customer: no LINE message.`]);
+      const { body: open } = await call('GET', '/maison/questions?status=open&limit=100', staff);
+      const toNotify = open.questions.find((row) => isDemo(row.customer) && row.status === 'open');
+      const notified = await call('POST', `/maison/questions/${toNotify.reference}/notify`, staff);
+      assert.equal(notified.status, 200, notified.text);
+      assert.deepEqual([notified.body.status, notified.body.message], ['demo', `Marked ${toNotify.reference} taken. Demo customer: no LINE message.`]);
 
-      const answered = await questionsService.answer(toNotify.reference, { text: 'Yes, we can.', addToKnowledge: false }, staff);
-      assert.equal(answered.status, 'demo', JSON.stringify(answered));
+      const answered = await call('POST', `/maison/questions/${toNotify.reference}/answer`, staff, { text: 'Yes, we can.', addToKnowledge: false });
+      assert.equal(answered.status, 200, answered.text);
+      assert.equal(answered.body.status, 'demo');
       const [question] = await strapi.documents(QUESTION).findMany({ filters: { reference: { $eq: toNotify.reference } } });
       assert.deepEqual([question.status, question.lineOutcome, question.lineDetail], ['answered', 'demo', 'Demo customer: no LINE message']);
       const [handOff] = await strapi.documents(INQUIRY).findMany({ filters: { questionReference: { $eq: toNotify.reference } } });
       assert.deepEqual([handOff.status, handOff.lineOutcome], ['replied', 'demo']);
 
-      const complaint = (await inquiryRows('complaint')).find((row) => isDemo(row.customer));
-      const replied = await inquiriesService.reply(complaint.documentId, 'We are sorry.', staff);
-      assert.deepEqual([replied.status, replied.message], ['demo', 'Marked it replied. Demo customer: no LINE message.']);
+      const { body: complaints } = await call('GET', '/maison/inquiries?filter=complaint&limit=100', staff);
+      const complaint = complaints.inquiries.find((row) => isDemo(row.customer));
+      const replied = await call('POST', `/maison/inquiries/${complaint.documentId}/reply`, staff, { text: 'We are sorry.' });
+      assert.equal(replied.status, 200, replied.text);
+      assert.deepEqual([replied.body.status, replied.body.message], ['demo', 'Marked it replied. Demo customer: no LINE message.']);
 
       // The rows show the outcome as demo, never as a failure.
-      const all = await inquiryRows();
-      assert.deepEqual(all.find((row) => row.documentId === complaint.documentId).line, { outcome: 'demo', detail: 'Demo customer: no LINE message' });
+      const { body: all } = await call('GET', '/maison/inquiries?filter=all&limit=100', staff);
+      assert.deepEqual(all.inquiries.find((row) => row.documentId === complaint.documentId).line, { outcome: 'demo', detail: 'Demo customer: no LINE message' });
       assert.deepEqual(pushes(), [], 'no push for a made-up customer');
     });
 
     describe('with demoLineUserId set to your own LINE account', () => {
       before(async () => {
-        await seed.resetDemoAppointments();
+        assert.equal((await call('POST', '/maison/demo/reset', staff)).status, 200);
         strapi.config.set('plugin::maison.demoLineUserId', PAUL_ID);
         line.requests.length = 0;
       });
       after(() => strapi.config.set('plugin::maison.demoLineUserId', null));
 
-      it('answers at once, a second press while it loads starts nothing, and the rows appear within a few seconds', async () => {
-        const [first, second] = await Promise.all([seed.startDemoActivity(), sleep(200).then(() => seed.startDemoActivity())]);
-        assert.equal(first.ok, true, JSON.stringify(first));
-        assert.equal(first.value.started, true);
-        assert.deepEqual(first.value.counts, { appointments: 5, questions: 5, inquiries: 10 });
-        assert.equal(second.ok, false);
-        assert.equal(second.code, 'already_loading');
-        assert.equal(second.message, 'Demo activity is still loading from the last press: the lists fill in over the next few seconds.');
+      it('answers 202 at once, a second press while it loads starts nothing, and the rows appear within a few seconds', async () => {
+        const [first, second] = await Promise.all([
+          call('POST', '/maison/demo/activity', staff),
+          sleep(200).then(() => call('POST', '/maison/demo/activity', staff)),
+        ]);
+        assert.equal(first.status, 202, first.text);
+        assert.deepEqual(first.body, { started: true, appointments: 5, questions: 5, inquiries: 10 });
+        assert.equal(second.status, 409, second.text);
+        assert.equal(second.body.error.details.code, 'already_loading');
+        assert.equal(second.body.error.message, 'Demo activity is still loading from the last press: the lists fill in over the next few seconds.');
 
         const everyone = { filters: { customer: { $in: [...Array.from({ length: 5 }, (_, n) => `line:Udec0de${'0'.repeat(25)}${n + 1}`), PAUL] } } };
         await waitFor(
@@ -406,10 +442,7 @@ describe('Load demo activity', () => {
           'the demo activity'
         );
         // Once it has finished, a press answers that it is there.
-        await first.value.done;
-        const last = await seed.startDemoActivity();
-        assert.equal(last.ok, true, JSON.stringify(last));
-        assert.equal(last.value.started, false);
+        await waitFor(async () => (await call('POST', '/maison/demo/activity', staff)).status === 200, 5_000, 'the load to end');
       });
 
       it('gives you one waiting request, one open question named from your LINE profile, and one open complaint', async () => {
@@ -429,10 +462,15 @@ describe('Load demo activity', () => {
       });
 
       it('marks yourLine on exactly your rows: one request, one question and two inquiries, the hand-off and the complaint', async () => {
-        const requests = await boardRows();
-        const questions = await questionRows();
-        const inquiries = await inquiryRows();
-        const summary = seen('summary', (await appointmentsService.summarizeRequests()).recent);
+        const read = async (path, key) => {
+          const { status, body } = await call('GET', path, staff);
+          assert.equal(status, 200, path);
+          return body[key];
+        };
+        const requests = await read('/maison/appointments?status=all&limit=50', 'appointments');
+        const questions = await read('/maison/questions?status=all&limit=100', 'questions');
+        const inquiries = await read('/maison/inquiries?filter=all&limit=100', 'inquiries');
+        const summary = (await call('GET', '/maison/appointments/summary', staff)).body.recent;
         const YOURS = 'line:U5ca…1e';
 
         for (const [what, rows] of [['request', requests], ['question', questions], ['inquiry', inquiries], ['summary row', summary]]) {
@@ -475,21 +513,21 @@ describe('Load demo activity', () => {
       it('sends real LINE messages to your account on Confirm, Let them know, Answer and Reply', async () => {
         line.requests.length = 0;
         const [visit] = await strapi.documents(APPOINTMENT).findMany({ status: 'draft', filters: { customer: { $eq: PAUL } } });
-        const confirmed = seen('confirm', await appointmentsService.confirm(visit.reference));
-        assert.equal(confirmed.ok, true, JSON.stringify(confirmed));
-        assert.equal(confirmed.value.appointment.confirmationSent, true);
-        assert.equal(confirmed.value.appointment.demoCustomer, false);
-        assert.equal(confirmed.value.appointment.yourLine, true, "Confirm's answer says it is yours");
+        const confirmed = await call('POST', `/maison/appointments/${visit.reference}/confirm`, staff);
+        assert.equal(confirmed.status, 200, confirmed.text);
+        assert.equal(confirmed.body.appointment.confirmationSent, true);
+        assert.equal(confirmed.body.appointment.demoCustomer, false);
+        assert.equal(confirmed.body.appointment.yourLine, true, "Confirm's answer says it is yours");
 
         const [question] = await strapi.documents(QUESTION).findMany({ filters: { customer: { $eq: PAUL } } });
-        const notified = seen('notify', await questionsService.notify(question.reference, staff));
-        assert.equal(notified.status, 'sent', JSON.stringify(notified));
-        const answered = seen('answer', await questionsService.answer(question.reference, { text: 'Yes, it matches.', addToKnowledge: false }, staff));
-        assert.equal(answered.status, 'sent', JSON.stringify(answered));
+        const notified = await call('POST', `/maison/questions/${question.reference}/notify`, staff);
+        assert.deepEqual([notified.status, notified.body.status], [200, 'sent'], notified.text);
+        const answered = await call('POST', `/maison/questions/${question.reference}/answer`, staff, { text: 'Yes, it matches.', addToKnowledge: false });
+        assert.deepEqual([answered.status, answered.body.status], [200, 'sent'], answered.text);
 
         const [complaint] = await strapi.documents(INQUIRY).findMany({ filters: { customer: { $eq: PAUL }, handedOff: { $eq: false } } });
-        const replied = seen('reply', await inquiriesService.reply(complaint.documentId, 'We are sorry about the strap.', staff));
-        assert.equal(replied.status, 'sent', JSON.stringify(replied));
+        const replied = await call('POST', `/maison/inquiries/${complaint.documentId}/reply`, staff, { text: 'We are sorry about the strap.' });
+        assert.deepEqual([replied.status, replied.body.status], [200, 'sent'], replied.text);
 
         assert.deepEqual(pushes(), [
           { to: PAUL_ID, type: 'flex' },
@@ -499,12 +537,17 @@ describe('Load demo activity', () => {
         ]);
       });
 
-      it('never shows a full LINE user ID in any answer a staff view gives, yours included', async () => {
-        const requests = await boardRows();
-        assert.ok(requests.some((row) => row.customer === `line:U5ca…1e`), 'the board lists your request, masked');
-        seen('summary', await appointmentsService.summarizeRequests());
-        await questionRows();
-        await inquiryRows();
+      it('never shows a full LINE user ID in any admin answer, yours included', async () => {
+        for (const path of [
+          '/maison/appointments?status=all&limit=50',
+          '/maison/appointments/summary',
+          '/maison/questions?status=all&limit=100',
+          '/maison/inquiries?filter=all&limit=100',
+        ]) {
+          const { status, body } = await call('GET', path, staff);
+          assert.equal(status, 200, path);
+          if (body.appointments) assert.ok(body.appointments.some((row) => row.customer === `line:U5ca…1e`), `${path} lists your request, masked`);
+        }
         assert.ok(answers.length > 10);
         for (const { path, text } of answers) {
           assert.doesNotMatch(text, LINE_USER_ID, `${path} masks every customer`);
