@@ -7,7 +7,8 @@ The next session starts here. Newest entries at the bottom of each section.
 - Phase 0 (plan): done. `docs/plan.md`.
 - Phase 1 (scaffold): done, reviewed by Sonnet, one fix round (init-env: duplicate keys, the placeholder match, line endings, `KEY: value`).
 - Phase 2 (Maison plugin, back end): done. Tasks 2A to 2E, two Sonnet reviews (no correctness bugs in the plugin), one fix round (two restored tests, the `@strapi/utils` check before every start and before the integration suites, init-env line endings and multi-line quoted values, trimmed LINE values), a short re-review. Checks: 2020 plugin unit tests, 163 integration tests, 58 script tests, both typechecks. Merged into `main`.
-- Phase 3 (customer app, screens): in progress. 3A done (19 library files ported with tests: dates, copy, locale, booking, status, LINE links, QR, LIFF, session, browser MCP client, Home page fetch; 227 app tests). 3B done (design tokens, shell, Agent view, Home with a server function, Collection, Product, My visits, Visit detail, not-found, the booking sheet on TanStack Form; 244 app tests). Checked in the browser pane: Home in EN and JA (one MCP call per switch), product page, booking sheet defaults (Ginza, next Saturday, 14:00, Osaka not in stock), not-found. 3C done (18 Playwright tests ported, 1 new for the not-found page; on the installed Chrome). I checked the new test by switching off the not-found screen: it failed, then passed again. My own run: 18 passed, 1 skipped (the LINE chat button case needs `VITE_LINE_OA_ID`; it passed when set on the command line). Phase 3 review running.
+- Phase 3 (customer app, screens): done. Tasks 3A to 3C, a Sonnet review (no rule broken), one fix round (double submit, `visits` cleared by the form, locale in the query key, server-only marker, the not-found comment, five new e2e checks and separate demo customers per spec), a short re-review. Checks: 249 app tests, 2020 plugin tests, 58 script tests, 23 Playwright tests passed and 1 skipped (needs `VITE_LINE_OA_ID`), both typechecks, the app build. Merged into `main`.
+- Phase 4 (concierge): next.
 
 ## Rulings
 
@@ -51,6 +52,8 @@ Format: `Ruling: <what> - <why> - <cost if wrong>`.
 - Ruling: the QueryClient is made per router in `getRouter` and passed through router context - the TanStack Start pattern, one client per server request - none.
 - Ruling: links to `/concierge` are plain `<a>` until phase 4 adds the route - a typed `Link` to a missing route fails the typecheck - none.
 - Ruling: Playwright runs on the installed Google Chrome (`channel: 'chrome'`, a fresh temporary profile) - no 270 MB Chromium download - the tests follow whatever Chrome version this Mac has.
+- Ruling: server-only app modules start with `import '@tanstack/react-start/server-only'`, so a client import that is used fails the build (Start's import protection; `start-client-core/skills/start-core/execution-model/SKILL.md`, "Import Protection: File Markers") - the original used Next's `server-only` - an import that is never used is tree-shaken and does not fail.
+- Ruling: the booking form guards Send request with a ref set on the first tap, released after a refusal or failure and kept after a booking; the form itself clears the `visits` queries after a booking - TanStack Form's `onSubmit` runs only after its async checks, so two quick taps could both send - none.
 - Ruling: `init-env` does not read multi-line quoted values - no `.env` here has one - a key inside such a value would count as present and not be added.
 
 ## Open with Paul
@@ -59,6 +62,7 @@ Format: `Ruling: <what> - <why> - <cost if wrong>`.
 
 ## Log
 
+- 10 October 2026: phase 3 done and merged into `main`. The e2e global setup resets demo activity in the dev database on each run.
 - 10 October 2026: phase 2 done and merged into `main`. The dev database now holds the demo admin, the catalog, the Public grants, the two tokens and the "Maison app" client; `app/.env` has `VITE_MAISON_CLIENT_ID`.
 - 10 October 2026: merged phase 1 into `main` (fast-forward to 19be520). Set the Anthropic key in the worktree. Phase 2 started.
 - 10 October 2026: phase 1. `init-env` with 16 tests (merges, never changes a set value, prints names only). Strapi 5.57 scaffold on SQLite, 1339, MCP on (`/mcp` answers 401 without a token), CORS for `http://localhost:3004`. TanStack Start app on 3004 with Tailwind v4, Vitest and a pin test. `npm install` at the root installs both and writes both `.env` files (mode 600). `npm run dev` starts both; checked `/_health` 204, `/admin` 200, the app 200, the CORS preflight.
