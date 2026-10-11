@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fullTime, timeAgo, visitTime } from '../../admin/src/time';
+import { fullTime, timeAgo, utcTimeAgo, visitTime } from '../../admin/src/time';
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
@@ -85,5 +85,22 @@ describe('fullTime', () => {
 
   it('shows a value that is not a date and time as it came', () => {
     expect(fullTime('tomorrow')).toBe('tomorrow');
+  });
+});
+
+describe('utcTimeAgo', () => {
+  it('reads the same moment as timeAgo for the first day: minutes and hours do not depend on the time zone', () => {
+    expect(utcTimeAgo(before(12 * MINUTE), NOW)).toBe('12 min ago');
+    expect(utcTimeAgo(before(3 * HOUR), NOW)).toBe('3 h ago');
+  });
+
+  it("gives the boutique's calendar day for a time the server wrote in UTC, which is not the day in the UTC digits", () => {
+    // 2026-10-03T20:00Z is 05:00 on Oct 4 in Tokyo, and NOW is Oct 5 at 12:00 there.
+    expect(utcTimeAgo('2026-10-03T20:00:00.000Z', NOW)).toBe('Oct 4');
+    expect(timeAgo('2026-10-03T20:00:00.000Z', NOW)).toBe('Oct 3');
+  });
+
+  it('shows a value that is not a date as it came', () => {
+    expect(utcTimeAgo('yesterday', NOW)).toBe('yesterday');
   });
 });

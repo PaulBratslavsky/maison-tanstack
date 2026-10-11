@@ -41,3 +41,16 @@ export const timeAgo = (iso: string, now: Date): string => {
   const parts = CALENDAR.exec(iso);
   return parts ? monthAndDay(parts) : iso;
 };
+
+const TOKYO_OFFSET = 9 * HOUR;
+
+/**
+ * `timeAgo` for a time the server wrote in UTC, like an inquiry's `createdAt` ("2026-10-03T20:00:00.000Z"). From a whole
+ * day on, `timeAgo` gives the date written in the string, which for UTC digits can be the day before the boutique's. This
+ * writes the same moment on the boutique's clock first. A value that isn't a date is shown as it came.
+ */
+export const utcTimeAgo = (iso: string, now: Date): string => {
+  const then = Date.parse(iso);
+  if (Number.isNaN(then)) return iso;
+  return timeAgo(`${new Date(then + TOKYO_OFFSET).toISOString().slice(0, -1)}+09:00`, now);
+};
