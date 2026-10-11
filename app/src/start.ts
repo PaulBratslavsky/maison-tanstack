@@ -7,5 +7,6 @@ import { liffHeaderMiddleware } from './lib/liff-header'
 const csrfMiddleware = createCsrfMiddleware({ filter: (context) => context.handlerType === 'serverFn' })
 
 export const startInstance = createStart(() => ({
-  requestMiddleware: [csrfMiddleware, liffHeaderMiddleware],
+  // The header middleware goes first, so it also sets the header on the 403 that the CSRF check answers with.
+  requestMiddleware: [liffHeaderMiddleware, csrfMiddleware],
 }))

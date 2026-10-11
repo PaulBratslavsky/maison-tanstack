@@ -10,7 +10,9 @@
 //     session (401), and another grant at the token endpoint (400)
 // On a build for the LIFF mock (X-Maison-Liff: mock) the proxy is closed: its three paths answer 404, and nothing
 // reaches Strapi, so a tunnel left open can't mint a session there.
-// Every answer says which LIFF the build signs in with (X-Maison-Liff), which `npm run tunnel` checks.
+// Every answer that Start's middleware makes says which LIFF the build signs in with (X-Maison-Liff), which `npm run tunnel`
+// checks: pages, server routes, server functions and the CSRF 403. Not the 308 for a path with a trailing slash, the 400
+// for a bad path, an uncaught 500, or a static file that `vite preview` serves itself.
 // From app/: node scripts/check-strapi-proxy.mjs. Runs every check, prints each, and exits 1 if any failed.
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -88,6 +90,13 @@ try {
   const home = await fetch(`${base}/`);
   const liff = home.headers.get('x-maison-liff');
   check(home.status === 200 && (liff === 'mock' || liff === 'line'), `the app answers with X-Maison-Liff: ${liff}`);
+
+  // Start's CSRF check answers a cross-origin server function POST with 403, and that answer carries the header too.
+  const crossOrigin = await fetch(`${base}/_serverFn/check`, { method: 'POST', headers: { Origin: 'https://elsewhere.example' }, body: '{}' });
+  check(
+    crossOrigin.status === 403 && crossOrigin.headers.get('x-maison-liff') === liff,
+    `a cross-origin server function POST answers 403 with X-Maison-Liff: ${crossOrigin.headers.get('x-maison-liff')} (it answered ${crossOrigin.status})`
+  );
 
   if (liff === 'mock') {
     for (const [path, init] of [

@@ -28,6 +28,12 @@ test('every answer says the app is a build for the LIFF mock: X-Maison-Liff mock
   }
 });
 
+test('a cross-origin server function request answers 403 from Start, with the header', async () => {
+  const answer = await send('POST', '/_serverFn/check', { headers: { Origin: 'https://elsewhere.example' }, body: '{}' });
+  expect(answer.status).toBe(403);
+  expect(answer.liff).toBe('mock');
+});
+
 test('the proxy routes answer 404 not_found in local mode, with or without a session, and the header on each', async () => {
   const session = { Authorization: 'Bearer mcp_at_made_up' };
   for (const [method, path, init] of [
