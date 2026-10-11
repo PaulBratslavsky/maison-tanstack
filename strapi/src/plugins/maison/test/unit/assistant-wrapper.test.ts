@@ -20,7 +20,7 @@ const collect = async (stream: AsyncIterable<Chunk>): Promise<Chunk[]> => {
 const optionsOf = (overrides: Partial<WrapOptions> = {}) => {
   const chatController = new AbortController();
   const responseController = new AbortController();
-  const describe_ = vi.fn((raw: RawRunError): StaffError => ({ code: String(raw.code ?? 'unknown'), message: `STAFF(${raw.code ?? 'unknown'})` }));
+  const describe_ = vi.fn((raw: RawRunError): StaffError => ({ code: String(raw.code ?? 'error'), message: `STAFF(${raw.code ?? 'error'})` }));
   const onSourceError = vi.fn();
   const onDone = vi.fn();
   const options: WrapOptions = {
@@ -135,12 +135,10 @@ describe('wrapStream, errors', () => {
     expect(providerError.rawEvent).toBeDefined();
   });
 
-  it('hands the original code and message to onSourceError, once per error, before anything is rewritten', async () => {
+  it('hands the original code and message to onSourceError once, before anything is rewritten', async () => {
     const { options, onSourceError } = optionsOf();
     await collect(wrapStream(scripted([providerError, { ...providerError, code: '529', message: 'overloaded' }]), options));
-    expect(onSourceError).toHaveBeenCalledTimes(2);
-    expect(onSourceError).toHaveBeenNthCalledWith(1, { code: '401', message: providerError.message });
-    expect(onSourceError).toHaveBeenNthCalledWith(2, { code: '529', message: 'overloaded' });
+    expect(onSourceError).toHaveBeenCalledExactlyOnceWith({ code: '401', message: providerError.message });
   });
 
   it('reads the code and message from error when the top level has none', async () => {
@@ -154,7 +152,7 @@ describe('wrapStream, errors', () => {
     const { options, describe } = optionsOf();
     const out = await collect(wrapStream(scripted([{ type: 'RUN_ERROR', message: 'Unknown error occurred' }]), options));
     expect(describe).toHaveBeenCalledWith({ code: undefined, message: 'Unknown error occurred' });
-    expect(out[0]).toMatchObject({ message: 'STAFF(unknown)', code: 'unknown' });
+    expect(out[0]).toMatchObject({ message: 'STAFF(error)', code: 'error' });
   });
 
   it('turns an error the source throws into a staff RUN_ERROR, and never lets the provider text through', async () => {
@@ -176,6 +174,64 @@ describe('wrapStream, errors', () => {
     expect(customNames(afterToolTurn)).toEqual([]);
     const emptyStop = await collect(wrapStream(scripted([providerError, finished('stop')]), options));
     expect(customNames(emptyStop)).toEqual([]);
+  });
+});
+
+describe('wrapStream, exactly one RUN_ERROR', () => {
+  const sourceError: Chunk = { type: 'RUN_ERROR', model: 'claude-sonnet-5-5', message: 'busy', code: '529' };
+  const errorsIn = (chunks: Chunk[]) => chunks.filter((chunk) => chunk.type === 'RUN_ERROR');
+
+  it('sends nothing after the first RUN_ERROR when the source goes on with a RUN_FINISHED, and stops chat()', async () => {
+    const { options, chatController } = optionsOf();
+    const out = await collect(wrapStream(scripted([started, sourceError, finished('stop')]), options));
+    expect(out.map((chunk) => chunk.type)).toEqual(['RUN_STARTED', 'RUN_ERROR']);
+    expect(chatController.signal.aborted).toBe(true);
+  });
+
+  it('sends no timeout error after a source error, even when the source then hangs past the deadline', async () => {
+    async function* hungAfterError(): AsyncGenerator<Chunk> {
+      yield sourceError;
+      await new Promise(() => {});
+    }
+    const { options } = optionsOf({ deadlineMs: 40 });
+    const out = await collect(wrapStream(hungAfterError(), options));
+    expect(errorsIn(out)).toHaveLength(1);
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ code: '529' });
+    await sleep(80);
+    expect(out).toHaveLength(1);
+  });
+
+  it('sends no second error when the source throws after a source error', async () => {
+    async function* throwsAfterError(): AsyncGenerator<Chunk> {
+      yield sourceError;
+      throw new Error('late failure sk-ant-api03-SECRET');
+    }
+    const { options, onSourceError } = optionsOf();
+    const out = await collect(wrapStream(throwsAfterError(), options));
+    expect(out).toHaveLength(1);
+    expect(errorsIn(out)).toHaveLength(1);
+    expect(onSourceError).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not pull the source again after a RUN_ERROR', async () => {
+    let pulls = 0;
+    async function* counted(): AsyncGenerator<Chunk> {
+      pulls += 1;
+      yield sourceError;
+      pulls += 1;
+      yield finished('stop');
+    }
+    const { options } = optionsOf();
+    await collect(wrapStream(counted(), options));
+    expect(pulls).toBe(1);
+  });
+
+  it('sends only the safe code, whatever describe answers', async () => {
+    const { options } = optionsOf({ describe: () => ({ code: 'sk-ant-SECRET-code', message: 'STAFF' }) });
+    const out = await collect(wrapStream(scripted([sourceError]), options));
+    expect(out[0]).toMatchObject({ code: 'error', error: { code: 'error' } });
+    expect(JSON.stringify(out)).not.toContain('SECRET');
   });
 });
 

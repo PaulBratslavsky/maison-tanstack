@@ -30,12 +30,20 @@ const HISTORY_REJECTED = /`?thinking`? block|`?signature`?/i;
 /** The adapter writes `String(err.status)` for a failure with no status, which is the text "undefined". */
 const hasCode = (code: RawRunError['code']): code is string | number => code !== null && code !== undefined && !['', 'undefined', 'null'].includes(String(code));
 
+/** The codes the page may be sent: the HTTP statuses the table below names, and the codes this plugin makes (internal is for a turn that could not start). Any other code is sent as `error`. */
+const SAFE_CODES = new Set(['400', '401', '403', '404', '429', '529', 'timeout', 'max_tokens', 'chat_too_long', 'not_ready', 'history_rejected', 'internal']);
+
+/** The code the page reads: one of SAFE_CODES, or `error`. The provider's own code can be any text, and it never reaches staff's page. */
+export const safeCode = (code: unknown): string => (typeof code === 'string' && SAFE_CODES.has(code) ? code : 'error');
+
 /**
  * The staff text for a RUN_ERROR, chosen by its code, and the code staff's page reads. Nothing the provider wrote is
  * repeated: its message can hold the key, request IDs and the customer's words.
  */
 export const staffErrorOf = (raw: RawRunError, context: ErrorContext): StaffError => {
-  if (!hasCode(raw.code)) return { code: 'unknown', message: SOMETHING_WRONG_TEXT };
+  // An Anthropic error that arrives as a stream `error` event has no HTTP status, so it has no code here and gets the general text.
+  // The original does the same, and the behaviour is kept.
+  if (!hasCode(raw.code)) return { code: 'error', message: SOMETHING_WRONG_TEXT };
   const code = String(raw.code);
   switch (code) {
     case '401':
@@ -58,8 +66,10 @@ export const staffErrorOf = (raw: RawRunError, context: ErrorContext): StaffErro
       return HISTORY_REJECTED.test(raw.message ?? '')
         ? { code: 'history_rejected', message: HISTORY_REJECTED_TEXT }
         : { code, message: SOMETHING_WRONG_TEXT };
-    default:
+    case 'internal':
       return { code, message: SOMETHING_WRONG_TEXT };
+    default:
+      return { code: 'error', message: SOMETHING_WRONG_TEXT };
   }
 };
 

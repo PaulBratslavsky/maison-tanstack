@@ -59,14 +59,19 @@ describe('staffErrorOf', () => {
     expect(staff(400, message)).toEqual({ code: '400', message: SOMETHING_WRONG_TEXT });
   });
 
-  it('gives any other code the general text and keeps the code, for the page to read', () => {
-    expect(staff(500)).toEqual({ code: '500', message: SOMETHING_WRONG_TEXT });
-    expect(staff('invalid_request_error')).toEqual({ code: 'invalid_request_error', message: SOMETHING_WRONG_TEXT });
-    expect(staff('ECONNRESET')).toEqual({ code: 'ECONNRESET', message: SOMETHING_WRONG_TEXT });
+  it('gives any other code the general text and the code error, so the provider\'s own code never reaches the page', () => {
+    for (const code of [500, 'invalid_request_error', 'ECONNRESET', 'unknown', 'sk-ant-api03-SECRET', 'history_rejected_x']) {
+      expect(staff(code)).toEqual({ code: 'error', message: SOMETHING_WRONG_TEXT });
+    }
   });
 
-  it.each([[undefined], ['undefined'], [null], ['null'], ['']])('gives a missing code (%j) the general text and the code unknown', (code) => {
-    expect(staff(code as any)).toEqual({ code: 'unknown', message: SOMETHING_WRONG_TEXT });
+  it.each([[undefined], ['undefined'], [null], ['null'], ['']])('gives a missing code (%j) the general text and the code error', (code) => {
+    expect(staff(code as any)).toEqual({ code: 'error', message: SOMETHING_WRONG_TEXT });
+  });
+
+  it('keeps every known code, and a 400 on the history as history_rejected', () => {
+    for (const code of ['400', '401', '403', '404', '429', '529', 'timeout', 'max_tokens', 'chat_too_long', 'not_ready', 'internal']) expect(staff(code).code).toBe(code);
+    expect(staff(400, 'Invalid `signature` in `thinking` block').code).toBe('history_rejected');
   });
 
   it('never repeats what the provider said, whatever the code', () => {

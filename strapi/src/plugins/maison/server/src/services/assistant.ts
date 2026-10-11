@@ -1,6 +1,6 @@
 import type { Core } from '@strapi/strapi';
 
-import { notReadyReason, staffErrorOf, withoutKey, type RawRunError, type StaffError } from '../assistant/errors';
+import { notReadyReason, safeCode, staffErrorOf, withoutKey, type RawRunError, type StaffError } from '../assistant/errors';
 import { instructions } from '../assistant/instructions';
 import { createAnthropicAdapter, loadSdk, toTools, type ChatAdapter, type ChatParams } from '../ai/sdk';
 import { assistantTools, toolLabel, type Ability, type AssistantToolSpec } from '../assistant/tools';
@@ -90,7 +90,6 @@ export async function* wrapStream(source: AsyncIterable<Chunk>, options: WrapOpt
   let timer: ReturnType<typeof setTimeout> | undefined;
   let sourceDone = false;
   let timedOut = false;
-  let failed = false;
   let lastFinished: Chunk | null = null;
   let sawText = false;
   let sawToolCall = false;
@@ -113,8 +112,8 @@ export async function* wrapStream(source: AsyncIterable<Chunk>, options: WrapOpt
       type: 'RUN_ERROR',
       timestamp: typeof rest.timestamp === 'number' ? rest.timestamp : Date.now(),
       message: staff.message,
-      code: staff.code,
-      error: { message: staff.message, code: staff.code },
+      code: safeCode(staff.code),
+      error: { message: staff.message, code: safeCode(staff.code) },
       ...(Object.keys(inMetadata).length > 0 ? { metadata: { tanstack: inMetadata } } : {}),
     };
   };
@@ -136,7 +135,6 @@ export async function* wrapStream(source: AsyncIterable<Chunk>, options: WrapOpt
               ]);
       } catch (error) {
         sourceDone = true;
-        failed = true;
         const raw = rawOfThrown(error);
         if (onSourceError) quietly(() => onSourceError(raw));
         yield staffError(raw);
@@ -148,7 +146,6 @@ export async function* wrapStream(source: AsyncIterable<Chunk>, options: WrapOpt
       if (step === RESPONSE_CLOSED) return;
       if (step === TIMED_OUT) {
         timedOut = true;
-        failed = true;
         yield staffError({ code: 'timeout', message: 'The request took too long.' });
         return;
       }
@@ -160,11 +157,12 @@ export async function* wrapStream(source: AsyncIterable<Chunk>, options: WrapOpt
       const chunk = step.value;
       switch (chunk.type) {
         case 'RUN_ERROR': {
-          failed = true;
-          const raw: RawRunError = { code: chunk.code ?? chunk.error?.code, message: chunk.message ?? chunk.error?.message };
+            const raw: RawRunError = { code: chunk.code ?? chunk.error?.code, message: chunk.message ?? chunk.error?.message };
           if (onSourceError) quietly(() => onSourceError(raw));
           yield staffError(raw, chunk);
-          break;
+          // One RUN_ERROR ends the stream: nothing the source sends after it, and no deadline or later throw, reaches the page.
+          stopChat();
+          return;
         }
         case 'TOOL_CALL_START':
           sawToolCall = true;
@@ -181,7 +179,7 @@ export async function* wrapStream(source: AsyncIterable<Chunk>, options: WrapOpt
           sawText = false;
           sawToolCall = false;
           yield chunk;
-          if (declined && !failed) yield customEvent(CUSTOM_EVENTS.declined);
+          if (declined) yield customEvent(CUSTOM_EVENTS.declined);
           break;
         }
         default:
@@ -189,7 +187,7 @@ export async function* wrapStream(source: AsyncIterable<Chunk>, options: WrapOpt
       }
     }
 
-    if (!failed && lastFinished && finishReasonOf(lastFinished) === 'tool_calls' && lastFinished.outcome?.type !== 'interrupt') {
+    if (lastFinished && finishReasonOf(lastFinished) === 'tool_calls' && lastFinished.outcome?.type !== 'interrupt') {
       yield customEvent(CUSTOM_EVENTS.maxTurns);
     }
   } finally {
@@ -280,7 +278,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
   };
 
   /**
-   * An answer that is a 200 event stream holding one RUN_ERROR with the staff text. ai-client 0.29.2 never reads the body
+   * An answer that is a 200 event stream holding one RUN_ERROR with the staff text. ai-client 0.39.2 never reads the body
    * of an HTTP error, so a refusal sent as one would reach staff as a bare status. A stream's error reaches them whole.
    *
    * It is written by hand and loads nothing: it is also what staff get when the SDK itself cannot be loaded. It is what
@@ -347,7 +345,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
           threadId: params.threadId,
           runId: params.runId,
           parentRunId: params.parentRunId,
-          ...(params.resume ? { resume: params.resume } : {}),
+          // The assistant has no interrupts and no client tools, so the browser's `resume` and `state` are never passed on.
           systemPrompts: [system],
           ...(tools.length > 0 ? { tools: tools as never } : {}),
           agentLoopStrategy: maxIterations(ASSISTANT_LIMITS.modelTurns),

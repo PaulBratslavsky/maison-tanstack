@@ -481,6 +481,20 @@ describe('turn, a run', () => {
   });
 });
 
+describe('turn, the browser\'s resume and state', () => {
+  it('never gives resume or state to chat(): the assistant has no interrupts, so the run is a plain turn', async () => {
+    const world = setup({ turns: [textTurn('Fine.')] });
+    const { events } = await run(world, 'Hi', {}, {
+      resume: [{ interruptId: 'i-1', status: 'resolved', payload: { approved: true } }],
+      state: { anything: 'here' },
+    });
+    expect(world.requests).toHaveLength(1);
+    expect(textOf(events)).toBe('Fine.');
+    expect(errorsOf(events)).toEqual([]);
+    expect(JSON.stringify(world.requests[0])).not.toContain('i-1');
+  });
+});
+
 describe('turn, errors', () => {
   it('turns an error from the provider into staff text, in the stream, and never lets the provider text through', async () => {
     const world = setup({ turns: [errorTurn('401', `401 {"error":{"message":"invalid x-api-key ${KEY}"},"request_id":"req_abc"}`)] });
