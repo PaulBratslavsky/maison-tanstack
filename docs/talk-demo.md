@@ -1,6 +1,6 @@
 # Running the talk demo
 
-The runbook for the 3-minute demo in "Building the AI-Powered Connected Experience" (QBurst and LY Corporation, Tokyo, 7 October 2026). The demo runs in local mode on one laptop, with the LIFF mock. This is the TanStack edition: Strapi is on port 1339 and the app on port 3004.
+This is a runbook to adapt, not a schedule tied to a date or an event. It was written for a 3-minute demo in the talk "Building the AI-Powered Connected Experience". Change the timings, the slide references and the steps to fit your own talk. The demo runs in local mode on one laptop, with the LIFF mock. This is the TanStack edition: Strapi is on port 1339 and the app on port 3004.
 
 ## One-time setup
 
