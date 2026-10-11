@@ -30,9 +30,10 @@ export default {
       component: async () => (await import('./components/RequestsWidget')).default,
     });
 
-    // The second Homepage widget (plugin::maison.inquiries), shown to admins who can review inquiries. It is a widget of
-    // its own, not a line in the requests widget: that one's body is laid out for a fixed height. Its link opens the
-    // Maison page on the Inquiries tab, which the page picks from `?tab=` (test/unit/admin-widgets.test.ts).
+    // The second Homepage widget (plugin::maison.inquiries), shown to admins who can review inquiries: the four counts and
+    // the newest five inquiries. It is a widget of its own, not a line in the requests widget, which fills Strapi's fixed
+    // body height with its own cards and table. Its link opens the Maison page on the Inquiries tab, which the page picks
+    // from `?tab=` (test/unit/admin-widgets.test.ts).
     app.widgets.register({
       id: 'inquiries',
       pluginId: PLUGIN_ID,

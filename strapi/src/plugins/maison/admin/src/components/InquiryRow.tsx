@@ -20,11 +20,9 @@ import { LINE_NOTE_COLORS, lineNote } from '../line-note';
 import { askedAt } from '../questions';
 import type { Acting, Action } from '../useInquiryActions';
 import { CLAMPED_TEXT_STYLE } from './clampedText';
+import { KIND_BADGES, SENTIMENT_COLORS, STATUS_BADGES } from './inquiryBadges';
 import { YourLineBadge } from './YourLineBadge';
 
-const STATUS_BADGES = { open: 'warning', replied: 'success', closed: 'neutral' } as const;
-const KIND_BADGES = { question: 'primary', complaint: 'danger', praise: 'success', other: 'secondary' } as const;
-const SENTIMENT_COLORS = { positive: 'success600', neutral: 'neutral800', negative: 'danger600' } as const;
 /** The table keeps its cells on one line, so the customer's words wrap instead, within about 24rem, and scroll when they are long. */
 const TEXT = { display: 'block', maxWidth: '24rem', style: CLAMPED_TEXT_STYLE } as const;
 /** LINE's reasons, the model's words and a hand-off's question wrap within about 18rem. */
