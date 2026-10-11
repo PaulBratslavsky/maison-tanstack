@@ -111,13 +111,13 @@ const SCHEMAS: Record<string, z.ZodRawShape> = {
 
 /**
  * Strapi's MCP server for a test, in memory. `handlers` answer by tool name: a tool with none answers `{}`. `calls` keeps
- * each call's tool and arguments in order. `tools` limits which tools are registered (all of a customer's by default).
+ * each call's tool and arguments in order. `tools` limits which tools are registered (all of a customer's by default); a name with no schema here is registered with no input.
  */
 export const fakeStrapi = async ({ handlers = {}, tools = Object.keys(SCHEMAS) }: { handlers?: Record<string, Handler>; tools?: string[] } = {}) => {
   const server = new McpServer({ name: 'fake-strapi', version: '1.0.0' });
   const calls: Array<{ name: string; args: Args }> = [];
   for (const name of tools) {
-    server.registerTool(name, { description: `The ${name} tool.`, inputSchema: SCHEMAS[name] }, async (args: Args, extra) => {
+    server.registerTool(name, { description: `The ${name} tool.`, inputSchema: SCHEMAS[name] ?? {} }, async (args: Args, extra) => {
       calls.push({ name, args });
       return (await handlers[name]?.(args, { signal: extra.signal })) ?? answer({});
     });

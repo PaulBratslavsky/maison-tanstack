@@ -4,7 +4,7 @@ import type { AddressInfo } from 'node:net';
 import { EventType, chat, maxIterations, type StreamChunk } from '@tanstack/ai';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { HIDDEN_TOOLS, openMcp } from './mcp-tools';
+import { CUSTOMER_TOOLS, openMcp } from './mcp-tools';
 import { SURFACE_HEADER } from './instructions';
 import { answer, fakeStrapi, refusal, scriptedModel, toolContext } from './test-support';
 
@@ -88,10 +88,19 @@ describe('openMcp', () => {
 });
 
 describe("the customer's tools", () => {
-  it('leaves out request_appointment and log_inquiry, and offers every other tool, in the server order', async () => {
+  it('leaves out request_appointment and log_inquiry, and offers the seven customer tools, in the server order', async () => {
     const { mcp } = await session();
-    expect(HIDDEN_TOOLS).toEqual(['request_appointment', 'log_inquiry']);
+    expect(CUSTOMER_TOOLS).toEqual(['browse_collections', 'search_products', 'view_product', 'find_boutiques', 'search_knowledge', 'my_appointments', 'hand_off_to_staff']);
     expect(mcp.tools.map((tool) => tool.name)).toEqual(['browse_collections', 'search_products', 'view_product', 'find_boutiques', 'search_knowledge', 'my_appointments', 'hand_off_to_staff']);
+  });
+
+  it("offers the model only Maison's seven customer tools, even when the server also lists Strapi's dev tool log and an unknown tool", async () => {
+    const all = ['log', 'browse_collections', 'surprise_tool', 'search_products', 'view_product', 'request_appointment', 'find_boutiques', 'search_knowledge', 'my_appointments', 'hand_off_to_staff', 'log_inquiry'];
+    const { mcp } = await session({ tools: all });
+    expect(mcp.tools.map((tool) => tool.name)).toEqual(['browse_collections', 'search_products', 'view_product', 'find_boutiques', 'search_knowledge', 'my_appointments', 'hand_off_to_staff']);
+    expect(mcp.listed).toEqual(all);
+    // The route can still call log_inquiry on the connection.
+    await expect(mcp.client.callTool({ name: 'log_inquiry', arguments: { message: 'a', reply: 'b', knowledgeFound: false, handedOff: false } })).resolves.toBeDefined();
   });
 
   it('lists the name of every tool Strapi offered, the hidden ones included, so the route knows whether log_inquiry is there', async () => {

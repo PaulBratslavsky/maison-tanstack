@@ -18,10 +18,12 @@ import { SURFACE_HEADER } from './instructions';
  */
 
 /**
- * The tools the model is never offered. The customer books in the visit picker, which calls request_appointment with
- * their own session. log_inquiry is the app's own call after a turn: the log says what happened, not what the model says.
+ * The only tools the model is offered, by name. Anything else the server lists is left out: the booking tool
+ * (the customer books in the visit picker, which calls request_appointment with their own session), log_inquiry (the
+ * app's own call after a turn: the log says what happened, not what the model says), Strapi's dev-only `log` tool and
+ * any tool a later version adds. The route can still call any of them on the connection.
  */
-export const HIDDEN_TOOLS = ['request_appointment', 'log_inquiry'] as const;
+export const CUSTOMER_TOOLS = ['browse_collections', 'search_products', 'view_product', 'find_boutiques', 'search_knowledge', 'my_appointments', 'hand_off_to_staff'] as const;
 
 /** The headers every call to Strapi carries: the customer's own, and the surface. Nothing else. */
 const headersFor = (authorization: string) => ({ Authorization: authorization, [SURFACE_HEADER]: 'concierge' });
@@ -66,12 +68,12 @@ export interface OpenMcpOptions {
 export interface MaisonMcp {
   /**
    * The connection, for the route's own calls: log_inquiry after a turn, find_boutiques for choose_visit's check, and
-   * close. Every tool of the customer's session can be called on it, the hidden ones included.
+   * close. Every tool of the customer's session can be called on it, the ones the model is not offered included.
    */
   client: McpConnection;
   /** The tools the model is offered, in Strapi's order. */
   tools: McpServerTool[];
-  /** The name of every tool Strapi listed for this session, the hidden ones included: log_inquiry is there only when the token may call it. */
+  /** The name of every tool Strapi listed for this session, the ones the model is not offered included: log_inquiry is there only when the token may call it. */
   listed: string[];
   /** Closes the connection. The route does it when the request is over, always. */
   close: () => Promise<void>;
@@ -79,17 +81,17 @@ export interface MaisonMcp {
 
 /**
  * Opens an MCP client to Strapi with the customer's own header and `x-maison-surface: concierge`, lists its tools and
- * turns each one the model may use into a server tool. Rejects when Strapi cannot be reached (the route answers 502).
+ * turns each customer tool into a server tool. Rejects when Strapi cannot be reached (the route answers 502).
  */
 export const openMcp = async ({ strapiUrl, authorization, createTransport = httpTransport }: OpenMcpOptions): Promise<MaisonMcp> => {
   const client = new Client({ name: 'maison-concierge', version: '1.0.0' });
   await client.connect(createTransport(new URL('mcp', strapiUrl.replace(/\/*$/, '/')), headersFor(authorization)));
   try {
     const { tools } = await client.listTools();
-    const hidden: readonly string[] = HIDDEN_TOOLS;
+    const allowed: readonly string[] = CUSTOMER_TOOLS;
     return {
       client,
-      tools: tools.filter((tool) => !hidden.includes(tool.name)).map((tool) => asServerTool(client, tool)),
+      tools: tools.filter((tool) => allowed.includes(tool.name)).map((tool) => asServerTool(client, tool)),
       listed: tools.map((tool) => tool.name),
       close: () => client.close(),
     };
