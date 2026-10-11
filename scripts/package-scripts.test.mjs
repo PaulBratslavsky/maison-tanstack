@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 const scripts = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')).scripts;
+const manifest = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'));
 const CHECK = 'node scripts/share-strapi-utils.mjs --check';
 
 test('every way to start Strapi first checks that the plugins share its @strapi/utils', () => {
@@ -76,4 +77,10 @@ test('the root npm run dev starts the verify mock once, through the app, and npm
 
 test('the root test script runs every node test, in scripts/ and app/scripts/', () => {
   assert.match(scripts('package.json').test, /node --test scripts\/\*\.test\.mjs app\/scripts\/\*\.test\.mjs$/);
+});
+
+test("strapi/ depends on pg 8, so a production database on Postgres works, as the original's did", () => {
+  const { dependencies } = manifest('strapi/package.json');
+  assert.match(dependencies.pg, /^\^8\.\d+\.\d+$/);
+  assert.ok(dependencies['better-sqlite3'], 'the laptop keeps SQLite');
 });
