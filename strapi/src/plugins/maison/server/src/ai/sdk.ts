@@ -11,6 +11,8 @@
  */
 import type { AnyTextAdapter, FetchWrapper } from '@tanstack/ai';
 
+import type { AssistantToolSpec } from '../assistant/tools';
+
 /**
  * What `chat()` takes as its adapter. The factories below give classes typed per model, which TypeScript 5.9 does not
  * match to this type's `any` slots, so each is cast once, here, where the adapters are made.
@@ -19,6 +21,8 @@ export type ChatAdapter = AnyTextAdapter;
 /** Wraps the fetch of one model call, as `chat({ wrapFetch })` takes it. */
 export type FetchWrap = FetchWrapper;
 export type Sdk = typeof import('@tanstack/ai');
+/** What `chatParamsFromRequestBody` gives: the AG-UI run input, with `messages` ready for `chat()`. */
+export type ChatParams = Awaited<ReturnType<Sdk['chatParamsFromRequestBody']>>;
 
 /** The model IDs the Anthropic adapter lists. Its list has `claude-haiku-4-5` and not the dated ID that labelling uses. */
 type AnthropicListedModel = Parameters<typeof import('@tanstack/ai-anthropic').createAnthropicChat>[0];
@@ -27,7 +31,7 @@ type AnthropicListedModel = Parameters<typeof import('@tanstack/ai-anthropic').c
 const notLoaded = (name: string, error: unknown) =>
   Object.assign(
     new Error(
-      `[maison] Labelling needs ${name}, and it could not be loaded. It is a dependency of this plugin, so this usually means a broken install: run npm install, then restart Strapi. Original error: ${error instanceof Error ? error.message : String(error)}`
+      `[maison] The assistant and inquiry labelling need ${name}, and it could not be loaded. It is a dependency of this plugin, so this usually means a broken install: run npm install, then restart Strapi. Original error: ${error instanceof Error ? error.message : String(error)}`
     ),
     { cause: error }
   );
@@ -58,6 +62,24 @@ export const createAnthropicAdapter = async (model: string, apiKey: string): Pro
     throw notLoaded('@tanstack/ai-anthropic', error);
   }
   return anthropic.createAnthropicChat(model as AnthropicListedModel, apiKey) as unknown as ChatAdapter;
+};
+
+/**
+ * The assistant's specs as tools for `chat()`. A spec with an `execute` becomes a server tool, which `chat()` runs. A spec
+ * without one is a client tool: `chat()` ends the run when the model calls it, and the browser runs it. The service passes the
+ * result to `chat()` with a cast, where the SDK's generics can't follow a list built at run time.
+ */
+export const toTools = async (specs: readonly AssistantToolSpec[]): Promise<unknown[]> => {
+  const { toolDefinition } = await loadSdk();
+  return specs.map((spec) => {
+    const definition = toolDefinition({ name: spec.name, description: spec.description, inputSchema: spec.inputSchema });
+    return spec.execute ? definition.server(spec.execute) : definition;
+  });
+};
+
+/** Forgets what was loaded, so a test can load it again. */
+export const resetSdkForTests = (): void => {
+  sdk = null;
 };
 
 /**
