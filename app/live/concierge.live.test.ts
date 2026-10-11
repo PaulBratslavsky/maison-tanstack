@@ -5,9 +5,9 @@
  * it refuses to run (live/support.ts). Two modes:
  * - The local model, the default: Ollama, through `conciergeModel` without the Anthropic key even when one is set. It
  *   costs nothing and runs offline.
- * - Claude, opt-in: `LIVE_MODEL=claude npm run test:live` (or `npm run test:live:claude`) runs the visit picker's cases
- *   on Claude Sonnet 5.5 with ANTHROPIC_API_KEY from app/.env. It costs money. The key is never printed: the test only
- *   checks that one is set.
+ * - Claude, opt-in: `LIVE_MODEL=claude npm run test:live` (or `npm run test:live:claude`) runs the same cases on Claude
+ *   Sonnet 5.5 with ANTHROPIC_API_KEY from app/.env, plus the visit picker's Claude cases. It costs money. The key is
+ *   never printed: the test only checks that one is set.
  *
  * The route's reply is TanStack AI's AG-UI events as server-sent events. `readTurn` (live/support.ts) feeds them to a
  * `StreamProcessor`, the same code `ChatClient` uses in the browser, so each check reads the messages the page would show.
@@ -349,7 +349,7 @@ const signedIn = () => {
   return () => token;
 };
 
-describe.skipIf(!ready || claude)('the concierge on the local model', () => {
+describe.skipIf(!ready)('the concierge on the chosen model', () => {
   const token = signedIn();
   /** One English turn through the route, as the page sends it. */
   const turn = (text: string) => converse(token(), [say(text, 'u1')]);

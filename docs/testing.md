@@ -45,10 +45,10 @@ No test in it calls Anthropic, Ollama or LINE.
 
 - **What they do.** They send real messages to the concierge's route in process (`handleConcierge`), signed in as a fixed test customer with the verify mock's ID tokens, and make real MCP calls to the running Strapi. The route's events are read with a `StreamProcessor`, as the browser does.
 - **They skip** with one plain line saying why when the app's client ID is missing, Strapi does not answer, or the model is not there. In LINE mode they refuse to run. The checks of the helpers in the same file run even when the model cases skip.
-- **The local model** (`test:live`) always uses Ollama, even when a Claude key is set, so it costs nothing. It checks that the demo's gift question is answered from the catalog tools, that the demo's first suggestion ends in a picker for Ginza, the next Saturday in Tokyo and 14:00 with nothing booked, that a care question is answered from product knowledge, and that "Can I pay in bitcoin?" shows the hand-off note.
+- **The local model** (`test:live`) always uses Ollama, even when a Claude key is set, so it costs nothing. `test:live:claude` runs the same four cases on Claude Sonnet 5.5, plus the Claude cases below. The four check that the demo's gift question is answered from the catalog tools, that the demo's first suggestion ends in a picker for Ginza, the next Saturday in Tokyo and 14:00 with nothing booked, that a care question is answered from product knowledge, and that "Can I pay in bitcoin?" shows the hand-off note.
 - **Claude** (`test:live:claude`, which sets `LIVE_MODEL=claude`) checks the visit picker's cases: "Can we schedule one?" from a product page, the demo's first suggestion, and a copy of a production conversation of 3 October that ends in a picker for the Cabin Case 55. It only checks that a key is set, and never prints it.
 - **What they leave.** Each turn is logged as an inquiry, and the bitcoin case leaves a question for staff open until you answer or reset it. Strapi allows a customer five open questions: past that, nothing is recorded, and the test still passes. **Reset demo activity** between rehearsals.
-- **Status.** These were written in phase 4 and have not been run against a model yet (`docs/progress.md`).
+- **Status.** On 11 October 2026 all 17 passed on Claude Sonnet 5.5 (`npm run test:live:claude`). The Ollama run has not been tried on this laptop.
 
 ## The plugin's own commands
 
