@@ -8,6 +8,7 @@
     "node": ">=22.12.0"
   },
   "scripts": {
+    "predev": "node ../scripts/line-mode.mjs require-local",
     "dev": "vite dev --host 127.0.0.1 --port 3004 --strictPort",
     "build": "vite build",
     "start": "vite preview --host 127.0.0.1 --port 3004 --strictPort",

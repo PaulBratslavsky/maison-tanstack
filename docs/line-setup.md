@@ -62,7 +62,7 @@ The same path was tested on a phone inside LINE in the original project: LINE si
 - **One origin.** ngrok forwards your domain to the app on 127.0.0.1:3004, a production build. The app passes three of Strapi's paths on to Strapi: `/mcp`, the token endpoint (`/api/strapi-oauth-mcp-manager/oauth/token`) and `/uploads`. Strapi, with its admin, stays on your laptop. `MAISON_APP_ORIGIN` is not needed, because the browser never calls Strapi on another origin.
 - **The proxy passes on only what those calls need:** the headers they use, and request bodies up to 1 MB. A longer body gets 413 before any of it reaches Strapi. Answers stream through as Strapi writes them. Any other Strapi path, such as `/admin`, answers 404 from the app. A path that climbs out of `/uploads`, also with percent-encoded dots or slashes, answers 404.
 - **And only what the phone sends:** on `/mcp`, a customer session or no `Authorization` at all (anything else gets 401), and at the token endpoint, the token exchange (anything else gets 400).
-- **Only LINE mode's build serves those paths.** The proxy reads `VITE_LIFF_MOCK`, which Vite builds into the app. A build for the LIFF mock, and `npm run dev`, answer 404 on them, so a tunnel left open after `npm run mode:local` reaches no Strapi that trusts the verify mock.
+- **Only LINE mode's build serves those paths.** The proxy reads `VITE_LIFF_MOCK`, which Vite builds into the app. A build for the LIFF mock answers 404 on them, and so does the dev server (`npm run dev`, at the root or in `app/`, which refuses to start in LINE mode), so a tunnel left open after `npm run mode:local` reaches no Strapi that trusts the verify mock.
 - **LINE verifies the ID tokens.** Strapi checks each one with LINE, for your channel, not with the local mock.
 - **The server reaches Strapi on this machine.** It uses `STRAPI_URL` from `app/.env`, never `VITE_STRAPI_URL`, which in LINE mode is your public domain.
 - **Every answer that Start's middleware makes says which build it is,** in the `X-Maison-Liff` header: `mock`, `line-dev` (a dev server in LINE mode) or `line` (a production build in LINE mode). That covers pages, server routes, server functions and the 403 for a cross-origin server function request. It leaves out Start's 308 and 400 answers made before the middleware, an uncaught 500, and static files that `vite preview` serves itself. `npm run tunnel` reads it.
@@ -143,7 +143,7 @@ npm run mode:local
 npm run dev          # Strapi, the app and the verify mock, as in local mode
 ```
 
-`npm run mode` says which mode you are in. `npm run dev` and `npm run dev:app` refuse to start while the app is in LINE mode. The tests (`npm run test:e2e`, `npm run test:live`) need local mode, and refuse to run in LINE mode.
+`npm run mode` says which mode you are in. `npm run dev` and `npm run dev:app` at the root, and `npm run dev` inside `app/`, refuse to start while the app is in LINE mode. Running `vite dev` by hand does not check. The tests (`npm run test:e2e`, `npm run test:live`) need local mode, and refuse to run in LINE mode.
 
 `npm start` in `app/` serves whatever `app/dist` holds. After `npm run start:line` that is a LINE build, so run `npm run build --prefix app` in local mode before you use `npm start` again.
 

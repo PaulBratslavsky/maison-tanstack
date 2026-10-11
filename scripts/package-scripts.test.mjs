@@ -44,6 +44,10 @@ test('npm run dev and npm run dev:app refuse to start in LINE mode, and npm run 
   assert.equal(root['dev:strapi'], 'npm run develop --prefix strapi');
 });
 
+test('npm run dev inside app/ also refuses to start in LINE mode', () => {
+  assert.equal(scripts('app/package.json').predev, 'node ../scripts/line-mode.mjs require-local');
+});
+
 test('npm run start:line needs LINE mode, builds the app in it, and serves the build on 127.0.0.1:3004 without the verify mock', () => {
   const steps = scripts('app/package.json')['start:line'].split('&&').map((step) => step.trim());
   assert.deepEqual(steps, ['node ../scripts/line-mode.mjs require-line', 'vite build', 'vite preview --host 127.0.0.1 --port 3004 --strictPort']);
