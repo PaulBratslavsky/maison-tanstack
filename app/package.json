@@ -9,9 +9,9 @@
   },
   "scripts": {
     "predev": "node ../scripts/line-mode.mjs require-local",
-    "dev": "vite dev --host 127.0.0.1 --port 3004 --strictPort",
+    "dev": "concurrently -k -n app,line-verify -c green,cyan \"vite dev --host 127.0.0.1 --port 3004 --strictPort\" \"node --env-file-if-exists=.env ../scripts/mock-line-verify.mjs --reuse\"",
     "build": "vite build",
-    "start": "vite preview --host 127.0.0.1 --port 3004 --strictPort",
+    "start": "concurrently -k -n app,line-verify -c green,cyan \"vite preview --host 127.0.0.1 --port 3004 --strictPort\" \"node --env-file-if-exists=.env ../scripts/mock-line-verify.mjs --reuse\"",
     "start:line": "node ../scripts/line-mode.mjs require-line && vite build && vite preview --host 127.0.0.1 --port 3004 --strictPort",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

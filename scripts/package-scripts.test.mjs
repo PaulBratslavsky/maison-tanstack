@@ -54,6 +54,26 @@ test('npm run start:line needs LINE mode, builds the app in it, and serves the b
   assert.ok(!scripts('app/package.json')['start:line'].includes('mock-line-verify'));
 });
 
+const MOCK = 'node --env-file-if-exists=.env ../scripts/mock-line-verify.mjs --reuse';
+
+test("npm run dev and npm start inside app/ also run the verify mock, which reuses one that already answers on 4546", () => {
+  const app = scripts('app/package.json');
+  assert.match(app.dev, /^concurrently -k /);
+  assert.ok(app.dev.includes(`"vite dev --host 127.0.0.1 --port 3004 --strictPort"`), app.dev);
+  assert.ok(app.dev.includes(`"${MOCK}"`), app.dev);
+  assert.match(app.start, /^concurrently -k /);
+  assert.ok(app.start.includes(`"vite preview --host 127.0.0.1 --port 3004 --strictPort"`), app.start);
+  assert.ok(app.start.includes(`"${MOCK}"`), app.start);
+});
+
+test('the root npm run dev starts the verify mock once, through the app, and npm run dev:app runs the same app script', () => {
+  const root = scripts('package.json');
+  assert.ok(!root.dev.includes('mock-line-verify'), root.dev);
+  assert.ok(root.dev.includes('"npm run dev --prefix app"'), root.dev);
+  assert.ok(root.dev.includes('"npm run develop --prefix strapi"'), root.dev);
+  assert.match(root['dev:app'], /&& npm run dev --prefix app$/);
+});
+
 test('the root test script runs every node test, in scripts/ and app/scripts/', () => {
   assert.match(scripts('package.json').test, /node --test scripts\/\*\.test\.mjs app\/scripts\/\*\.test\.mjs$/);
 });

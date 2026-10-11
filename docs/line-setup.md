@@ -127,7 +127,7 @@ Who can sign in:
 
 `npm run tunnel` refuses to start unless all of these hold:
 - `strapi/.env` has no `LINE_VERIFY_URL`, and both `.env` files are in LINE mode
-- nothing answers on the verify mock's port, 127.0.0.1:4546. `npm run dev` starts the mock, which is why LINE mode uses `npm run start:line`.
+- nothing answers on the verify mock's port, 127.0.0.1:4546. `npm run dev`, `npm run dev:app` and `npm start` start the mock, which is why LINE mode uses `npm run start:line`.
 - the app on 127.0.0.1:3004 is the LINE build that `npm run start:line` serves: its `X-Maison-Liff` header says `line`. A build for the LIFF mock says `mock`, and a dev server in LINE mode says `line-dev`.
 - the running Strapi, reached through the app, refuses a forged ID token with `invalid_grant`, because LINE checks it. The tunnel does not start either when Strapi cannot be reached, or cannot check the token.
 

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "postinstall": "npm install --prefix strapi && npm install --prefix app && node scripts/init-env.mjs",
-    "dev": "node scripts/line-mode.mjs require-local && concurrently -k -n strapi,app,line-verify -c magenta,green,cyan \"npm run develop --prefix strapi\" \"npm run dev --prefix app\" \"node --env-file-if-exists=app/.env scripts/mock-line-verify.mjs\"",
+    "dev": "node scripts/line-mode.mjs require-local && concurrently -k -n strapi,app -c magenta,green \"npm run develop --prefix strapi\" \"npm run dev --prefix app\"",
     "dev:strapi": "npm run develop --prefix strapi",
     "dev:app": "node scripts/line-mode.mjs require-local && npm run dev --prefix app",
     "setup": "node --env-file=strapi/.env strapi/scripts/maison-setup.mjs",

@@ -52,7 +52,7 @@ To try the whole flow, open **Ask the concierge** in the app and tap the first s
 | Use | Model | Set by |
 | --- | --- | --- |
 | The concierge | Claude Sonnet 5.5 (`claude-sonnet-5-5`) | `ANTHROPIC_API_KEY` in `app/.env` |
-| The concierge, with no key | `qwen3-14b-32k` on [Ollama](https://ollama.com) at `http://127.0.0.1:11434` | `OLLAMA_MODEL`, `OLLAMA_BASE_URL` in `app/.env` |
+| The concierge, with no key | `qwen3-14b-32k` on [Ollama](https://ollama.com) at `http://127.0.0.1:11434` | `OLLAMA_MODEL`, `OLLAMA_BASE_URL` in `app/.env`. A trailing `/v1` on `OLLAMA_BASE_URL`, as maison-demo had it, is dropped |
 | The staff assistant | Claude Sonnet 5.5 (`claude-sonnet-5-5`) | `AI_API_KEY` in `strapi/.env`; `AI_CHAT_MODEL` changes the model |
 | Inquiry labelling | Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) | `AI_API_KEY` in `strapi/.env` |
 | Inquiry labelling, with no key | Ollama | `AI_PROVIDER=ollama` and `AI_BASE_URL` in `strapi/.env` |
@@ -106,7 +106,7 @@ Everything listens on 127.0.0.1 only. The original uses 1338, 3003, 4545 and 401
 | Script | What it does |
 | --- | --- |
 | `npm run dev` | Strapi, the app and the verify mock, together. Refuses to start in LINE mode |
-| `npm run dev:strapi`, `npm run dev:app` | One half alone |
+| `npm run dev:strapi`, `npm run dev:app` | One half alone. `dev:app` and `npm start` in `app/` run the app with the verify mock, and start no second mock when one already answers on 4546 |
 | `npm run setup` | The demo admin, catalog, Public grants, tokens and OAuth client. Safe to run again, but it replaces the app's OAuth client, so restart the app after it |
 | `npm test` | The unit tests of both halves and the scripts. See [Testing](docs/testing.md) |
 | `npm run test:integration`, `test:e2e`, `test:live`, `test:live:claude` | The tests that need more. See [Testing](docs/testing.md) |

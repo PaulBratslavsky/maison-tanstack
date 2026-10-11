@@ -47,8 +47,8 @@ const takenPort = async () => {
 };
 
 /** The mock as `npm run dev` starts it, on `port`: its output so far, and its exit. */
-const startMock = (port) => {
-  const child = spawn(process.execPath, [MOCK], { env: { ...process.env, MOCK_LINE_VERIFY_PORT: String(port), LINE_LOGIN_CHANNEL_ID: '1234567890' }, stdio: ['ignore', 'pipe', 'pipe'] });
+const startMock = (port, args = []) => {
+  const child = spawn(process.execPath, [MOCK, ...args], { env: { ...process.env, MOCK_LINE_VERIFY_PORT: String(port), LINE_LOGIN_CHANNEL_ID: '1234567890' }, stdio: ['ignore', 'pipe', 'pipe'] });
   const output = { text: '' };
   for (const stream of [child.stdout, child.stderr]) stream.on('data', (chunk) => (output.text += chunk));
   return { child, output, exited: once(child, 'exit') };
@@ -62,6 +62,21 @@ test('exits 1, with what to check, when its port is taken, as by another verify 
     assert.equal(code, 1);
     assert.equal(output.text.trim(), `Port ${taken.port} is in use: is another verify mock running?`);
   } finally {
+    taken.close();
+  }
+});
+
+test('with --reuse, keeps running and says so when its port is taken, so a second `npm run dev` or `npm start` does not stop the app', async () => {
+  const taken = await takenPort();
+  const { child, output, exited } = startMock(taken.port, ['--reuse']);
+  try {
+    for (let attempt = 0; attempt < 50 && !output.text.includes('already answers'); attempt += 1) await new Promise((resolve) => setTimeout(resolve, 100));
+    assert.equal(output.text.trim(), `A verify mock already answers on port ${taken.port}. Using it.`);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    assert.equal(child.exitCode, null, 'it exited');
+  } finally {
+    child.kill();
+    await exited;
     taken.close();
   }
 });

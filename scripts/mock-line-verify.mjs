@@ -1,6 +1,7 @@
 // A local stand-in for LINE's ID token verify endpoint (POST /verify), used on stage and in development.
 // It accepts "valid.<LINE user ID>" for the configured channel, which is what the app's LIFF mock returns.
-// Never point production at it. Env: MOCK_LINE_VERIFY_PORT (4546), LINE_LOGIN_CHANNEL_ID (1234567890).
+// Never point production at it. With --reuse, a port that is taken is not an error: the mock says so and stays idle, so
+// the app's scripts can start it next to `vite` without a second `npm run dev` stopping the app. Env: MOCK_LINE_VERIFY_PORT (4546), LINE_LOGIN_CHANNEL_ID (1234567890).
 import { createServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
 
@@ -46,6 +47,12 @@ const start = () => {
   // One line, and exit 1, rather than a stack trace: most likely `npm run dev` is already running, with its own mock.
   // exitCode, not process.exit(): the message must reach a pipe (concurrently's) before the process ends.
   server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE' && process.argv.includes('--reuse')) {
+      console.log(`A verify mock already answers on port ${port}. Using it.`);
+      // Idle, not exited: `concurrently -k` stops the app when any of its processes ends.
+      setInterval(() => {}, 2 ** 30);
+      return;
+    }
     console.error(error.code === 'EADDRINUSE' ? `Port ${port} is in use: is another verify mock running?` : `The verify mock couldn't start: ${error.message}`);
     process.exitCode = 1;
   });
