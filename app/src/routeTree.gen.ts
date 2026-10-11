@@ -11,11 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConciergeRouteImport } from './routes/concierge'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as ApiConciergeRouteImport } from './routes/api/concierge'
 import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
 import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
+import { Route as UploadsSplatRouteImport } from './routes/uploads.$'
 import { Route as VisitsIndexRouteImport } from './routes/visits.index'
 import { Route as VisitsReferenceRouteImport } from './routes/visits.$reference'
+import { Route as ApiStrapiOauthMcpManagerOauthTokenRouteImport } from './routes/api/strapi-oauth-mcp-manager/oauth/token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -25,6 +28,11 @@ const IndexRoute = IndexRouteImport.update({
 const ConciergeRoute = ConciergeRouteImport.update({
   id: '/concierge',
   path: '/concierge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiConciergeRoute = ApiConciergeRouteImport.update({
@@ -42,6 +50,11 @@ const ProductsSlugRoute = ProductsSlugRouteImport.update({
   path: '/products/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UploadsSplatRoute = UploadsSplatRouteImport.update({
+  id: '/uploads/$',
+  path: '/uploads/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VisitsIndexRoute = VisitsIndexRouteImport.update({
   id: '/visits/',
   path: '/visits/',
@@ -52,73 +65,100 @@ const VisitsReferenceRoute = VisitsReferenceRouteImport.update({
   path: '/visits/$reference',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStrapiOauthMcpManagerOauthTokenRoute =
+  ApiStrapiOauthMcpManagerOauthTokenRouteImport.update({
+    id: '/api/strapi-oauth-mcp-manager/oauth/token',
+    path: '/api/strapi-oauth-mcp-manager/oauth/token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/concierge': typeof ConciergeRoute
+  '/mcp': typeof McpRoute
   '/api/concierge': typeof ApiConciergeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/uploads/$': typeof UploadsSplatRoute
   '/visits/$reference': typeof VisitsReferenceRoute
   '/visits/': typeof VisitsIndexRoute
+  '/api/strapi-oauth-mcp-manager/oauth/token': typeof ApiStrapiOauthMcpManagerOauthTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/concierge': typeof ConciergeRoute
+  '/mcp': typeof McpRoute
   '/api/concierge': typeof ApiConciergeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/uploads/$': typeof UploadsSplatRoute
   '/visits/$reference': typeof VisitsReferenceRoute
   '/visits': typeof VisitsIndexRoute
+  '/api/strapi-oauth-mcp-manager/oauth/token': typeof ApiStrapiOauthMcpManagerOauthTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/concierge': typeof ConciergeRoute
+  '/mcp': typeof McpRoute
   '/api/concierge': typeof ApiConciergeRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/uploads/$': typeof UploadsSplatRoute
   '/visits/$reference': typeof VisitsReferenceRoute
   '/visits/': typeof VisitsIndexRoute
+  '/api/strapi-oauth-mcp-manager/oauth/token': typeof ApiStrapiOauthMcpManagerOauthTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/concierge'
+    | '/mcp'
     | '/api/concierge'
     | '/collections/$slug'
     | '/products/$slug'
+    | '/uploads/$'
     | '/visits/$reference'
     | '/visits/'
+    | '/api/strapi-oauth-mcp-manager/oauth/token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/concierge'
+    | '/mcp'
     | '/api/concierge'
     | '/collections/$slug'
     | '/products/$slug'
+    | '/uploads/$'
     | '/visits/$reference'
     | '/visits'
+    | '/api/strapi-oauth-mcp-manager/oauth/token'
   id:
     | '__root__'
     | '/'
     | '/concierge'
+    | '/mcp'
     | '/api/concierge'
     | '/collections/$slug'
     | '/products/$slug'
+    | '/uploads/$'
     | '/visits/$reference'
     | '/visits/'
+    | '/api/strapi-oauth-mcp-manager/oauth/token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConciergeRoute: typeof ConciergeRoute
+  McpRoute: typeof McpRoute
   ApiConciergeRoute: typeof ApiConciergeRoute
   CollectionsSlugRoute: typeof CollectionsSlugRoute
   ProductsSlugRoute: typeof ProductsSlugRoute
+  UploadsSplatRoute: typeof UploadsSplatRoute
   VisitsReferenceRoute: typeof VisitsReferenceRoute
   VisitsIndexRoute: typeof VisitsIndexRoute
+  ApiStrapiOauthMcpManagerOauthTokenRoute: typeof ApiStrapiOauthMcpManagerOauthTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -135,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/concierge'
       fullPath: '/concierge'
       preLoaderRoute: typeof ConciergeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/concierge': {
@@ -158,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/uploads/$': {
+      id: '/uploads/$'
+      path: '/uploads/$'
+      fullPath: '/uploads/$'
+      preLoaderRoute: typeof UploadsSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/visits/': {
       id: '/visits/'
       path: '/visits'
@@ -172,27 +226,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VisitsReferenceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/strapi-oauth-mcp-manager/oauth/token': {
+      id: '/api/strapi-oauth-mcp-manager/oauth/token'
+      path: '/api/strapi-oauth-mcp-manager/oauth/token'
+      fullPath: '/api/strapi-oauth-mcp-manager/oauth/token'
+      preLoaderRoute: typeof ApiStrapiOauthMcpManagerOauthTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConciergeRoute: ConciergeRoute,
+  McpRoute: McpRoute,
   ApiConciergeRoute: ApiConciergeRoute,
   CollectionsSlugRoute: CollectionsSlugRoute,
   ProductsSlugRoute: ProductsSlugRoute,
+  UploadsSplatRoute: UploadsSplatRoute,
   VisitsReferenceRoute: VisitsReferenceRoute,
   VisitsIndexRoute: VisitsIndexRoute,
+  ApiStrapiOauthMcpManagerOauthTokenRoute:
+    ApiStrapiOauthMcpManagerOauthTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }
