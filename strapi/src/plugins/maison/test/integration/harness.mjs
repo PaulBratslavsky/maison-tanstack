@@ -1,4 +1,4 @@
-import { rmSync } from 'node:fs';
+import { mkdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -40,7 +40,7 @@ export const requireFromApp = (id) => createRequire(path.join(appDirectory(), 'p
 const AI_VARIABLES = ['AI_PROVIDER', 'AI_MODEL', 'AI_API_KEY', 'AI_BASE_URL'];
 
 /**
- * Boots the Strapi app (it loads this plugin from src/plugins/maison, so run `npm run build` in the plugin first) against .tmp/maison-test-<name>.db, then sets `maisonConfig` on
+ * Boots the Strapi app (it loads this plugin from src/plugins/maison, so run `npm run build` in the plugin first) against .tmp/maison-test-<name>.db, with its uploads in .tmp/maison-test-<name>-public (strapi/config/server.ts reads MAISON_PUBLIC_DIR), then sets `maisonConfig` on
  * the plugin's config.
  *
  * No test reaches LINE or a model. The app's .env can't hand Strapi a channel access token or an AI setting, a real key
@@ -54,8 +54,13 @@ const AI_VARIABLES = ['AI_PROVIDER', 'AI_MODEL', 'AI_API_KEY', 'AI_BASE_URL'];
 export async function bootStrapi(name, { maisonConfig = {} } = {}) {
   const appDir = appDirectory();
   const dbFile = `.tmp/maison-test-${name}.db`;
+  // The suite's uploads (the seed's images) go to its own folder, not strapi/public/uploads, where every run added about 100 MB.
+  const publicDir = `.tmp/maison-test-${name}-public`;
   rmSync(path.join(appDir, dbFile), { force: true });
+  rmSync(path.join(appDir, publicDir), { recursive: true, force: true });
+  mkdirSync(path.join(appDir, publicDir, 'uploads'), { recursive: true }); // the local upload provider needs this folder
   process.env.DATABASE_FILENAME = dbFile;
+  process.env.MAISON_PUBLIC_DIR = publicDir;
   process.env.LINE_CHANNEL_ACCESS_TOKEN = '';
   for (const variable of AI_VARIABLES) process.env[variable] = '';
   process.chdir(appDir);

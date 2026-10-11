@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { bootStrapi, defaultAppDir } from '../integration/harness.mjs';
+import serverConfig from '../../../../../config/server';
 
 /**
  * A stand-in for the `@strapi/strapi` package of the app the harness boots. It keeps the AI environment variables as
@@ -21,13 +22,13 @@ exports.createStrapi = () => ({
   cron: { stop: () => events.push({ cron: 'stopped' }) },
   async load() {
     events.push({
-      loaded: Object.fromEntries(['AI_PROVIDER', 'AI_MODEL', 'AI_API_KEY', 'AI_BASE_URL', 'LINE_CHANNEL_ACCESS_TOKEN'].map((name) => [name, process.env[name]])),
+      loaded: Object.fromEntries(['AI_PROVIDER', 'AI_MODEL', 'AI_API_KEY', 'AI_BASE_URL', 'LINE_CHANNEL_ACCESS_TOKEN', 'MAISON_PUBLIC_DIR'].map((name) => [name, process.env[name]])),
     });
   },
 });
 `;
 
-const ENVIRONMENT = ['STRAPI_APP_DIR', 'DATABASE_FILENAME', 'LINE_CHANNEL_ACCESS_TOKEN', 'AI_PROVIDER', 'AI_MODEL', 'AI_API_KEY', 'AI_BASE_URL'];
+const ENVIRONMENT = ['MAISON_PUBLIC_DIR', 'STRAPI_APP_DIR', 'DATABASE_FILENAME', 'LINE_CHANNEL_ACCESS_TOKEN', 'AI_PROVIDER', 'AI_MODEL', 'AI_API_KEY', 'AI_BASE_URL'];
 
 describe('the integration harness', () => {
   const keptEnvironment = Object.fromEntries(ENVIRONMENT.map((name) => [name, process.env[name]]));
@@ -69,7 +70,7 @@ describe('the integration harness', () => {
     await bootStrapi('harness');
 
     expect(appOf().events[0]).toEqual({
-      loaded: { AI_PROVIDER: '', AI_MODEL: '', AI_API_KEY: '', AI_BASE_URL: '', LINE_CHANNEL_ACCESS_TOKEN: '' },
+      loaded: { AI_PROVIDER: '', AI_MODEL: '', AI_API_KEY: '', AI_BASE_URL: '', LINE_CHANNEL_ACCESS_TOKEN: '', MAISON_PUBLIC_DIR: '.tmp/maison-test-harness-public' },
     });
   });
 
@@ -99,6 +100,32 @@ describe('the integration harness', () => {
 
     expect(strapi).toBeDefined();
     expect(appOf().events.map((event) => Object.keys(event)[0])).toEqual(['loaded', 'cron']);
+  });
+
+  it("keeps a suite's uploads in .tmp/maison-test-<name>-public, away from strapi/public/uploads, and starts each boot with that folder empty", async () => {
+    const leftover = path.join(appDir, '.tmp', 'maison-test-harness-public', 'uploads', 'old-image.jpg');
+    mkdirSync(path.dirname(leftover), { recursive: true });
+    writeFileSync(leftover, 'an image from an earlier run');
+    writeFileSync(path.join(appDir, '.tmp', 'maison-test-harness.db'), 'a database from an earlier run');
+    const other = path.join(appDir, '.tmp', 'maison-test-other-public', 'uploads', 'keep.jpg');
+    mkdirSync(path.dirname(other), { recursive: true });
+    writeFileSync(other, 'another suite');
+
+    await bootStrapi('harness');
+
+    expect(process.env.MAISON_PUBLIC_DIR).toBe('.tmp/maison-test-harness-public');
+    expect(process.env.DATABASE_FILENAME).toBe('.tmp/maison-test-harness.db');
+    expect(existsSync(leftover)).toBe(false);
+    expect(existsSync(path.join(appDir, '.tmp', 'maison-test-harness.db'))).toBe(false);
+    expect(existsSync(other)).toBe(true);
+    // The local upload provider refuses to start without its uploads folder.
+    expect(existsSync(path.join(appDir, '.tmp', 'maison-test-harness-public', 'uploads'))).toBe(true);
+  });
+
+  it("is what Strapi's server config reads: dirs.public follows MAISON_PUBLIC_DIR and is ./public without it", () => {
+    const env = (values: Record<string, string>) => Object.assign((key: string, fallback?: string) => values[key] ?? fallback, { int: (key: string, fallback: number) => Number(values[key] ?? fallback), bool: (key: string, fallback: boolean) => fallback, array: () => ['a'] });
+    expect((serverConfig({ env: env({}) } as never) as { dirs?: { public?: string } }).dirs?.public).toBe('./public');
+    expect((serverConfig({ env: env({ MAISON_PUBLIC_DIR: '.tmp/x-public' }) } as never) as { dirs?: { public?: string } }).dirs?.public).toBe('.tmp/x-public');
   });
 
   it('boots the app that holds the plugin when STRAPI_APP_DIR is not set', () => {

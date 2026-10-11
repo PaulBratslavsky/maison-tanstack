@@ -9,6 +9,8 @@ const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Server =>
     // The public address. The Maison plugin builds absolute media URLs from it, because the app runs on
     // another origin. strapi-oauth-mcp-manager uses it in its OAuth metadata.
     url: env('PUBLIC_URL', '') || `http://localhost:${port}`,
+    // Where Strapi keeps its static files, uploads included. The integration tests set MAISON_PUBLIC_DIR so their seed images stay out of public/uploads.
+    dirs: { public: env('MAISON_PUBLIC_DIR', './public') },
     app: {
       keys: env.array('APP_KEYS')!,
     },
