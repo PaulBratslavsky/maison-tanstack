@@ -5,18 +5,7 @@
  */
 // Intl.Segmenter is ES2022. The admin's base tsconfig may declare less, but every browser Strapi's admin supports has it.
 /// <reference lib="es2022.intl" />
-
-/** A part of a message, as TanStack AI keeps it: `type` says which, and the rest depends on it. Phase 6 moves this to the assistant's own file. */
-interface PartLike {
-  type: string;
-  [field: string]: any;
-}
-
-/** A message as TanStack AI keeps it, as far as the saved chats read it. */
-interface MessageLike {
-  role: string;
-  parts: readonly unknown[];
-}
+import type { MessageLike, PartLike } from './assistant';
 
 /** The saved chats' routes, served under /maison. A unit test holds them to the server's. */
 export const CONVERSATION_PATHS = {

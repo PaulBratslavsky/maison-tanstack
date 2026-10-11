@@ -2,13 +2,15 @@
 import { Button } from '@strapi/design-system';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useTheme } from 'styled-components';
 import { describe, expect, it, vi } from 'vitest';
 import { renderInTheme } from './render';
 
 /**
  * These hold the toolchain the component tests stand on, so a broken install or config fails here, with a clear name, and not in
- * the middle of a component's own test: the design system inside its provider, and user events. The Markdown check comes back with the assistant, in phase 6.
+ * the middle of a component's own test: the design system inside its provider, user events, and react-markdown with remark-gfm.
  */
 
 const Scheme = () => <span data-testid="scheme">{useTheme().colorScheme}</span>;
@@ -30,5 +32,12 @@ describe('the component tests', () => {
 
   it('clean up after each test: the first test left nothing in the document', () => {
     expect(document.body.textContent).toBe('');
+  });
+
+  it('draw a Markdown table with react-markdown and remark-gfm', () => {
+    renderInTheme(<Markdown remarkPlugins={[remarkGfm]}>{'| Reference | Status |\n| --- | --- |\n| APT-4821 | requested |'}</Markdown>);
+    expect(screen.getByRole('table')).toBeTruthy();
+    expect(screen.getByRole('columnheader', { name: 'Status' })).toBeTruthy();
+    expect(screen.getByRole('cell', { name: 'APT-4821' })).toBeTruthy();
   });
 });

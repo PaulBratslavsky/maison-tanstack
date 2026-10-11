@@ -1,15 +1,17 @@
 import { Crown } from '@strapi/icons';
 import type { StrapiApp } from '@strapi/strapi/admin';
 
+import { MaisonMenuIcon } from './components/assistant/MaisonMenuIcon';
 import { PERMISSIONS } from './permissions';
 import { PLUGIN_ID } from './pluginId';
 
 export default {
   register(app: StrapiApp) {
-    // The icon is the Crown. The assistant drawer comes in phase 6 and changes the icon then.
+    // The icon is the Crown, and carries the assistant: Strapi draws a menu link's icon on every admin page, and has no other place for something
+    // that is on every page. See MaisonMenuIcon.tsx and assistantHost.tsx for how, and for what a Strapi upgrade could break.
     app.addMenuLink({
       to: `plugins/${PLUGIN_ID}`,
-      icon: Crown,
+      icon: MaisonMenuIcon,
       intlLabel: { id: `${PLUGIN_ID}.plugin.name`, defaultMessage: 'Maison' },
       Component: () => import('./pages/MaisonPage'),
       permissions: PERMISSIONS.page,

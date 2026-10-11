@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
+import { MaisonMenuIcon } from '../../admin/src/components/assistant/MaisonMenuIcon';
 import plugin from '../../admin/src/index';
 import { PERMISSIONS } from '../../admin/src/permissions';
 import { selectTab, visibleTabs } from '../../admin/src/tabs';
 
-// Registering needs only the icons as values, and drawing them needs a browser.
+// Registering needs only the icons as values, and drawing them needs a browser. Maison's menu icon has its own tests (maison-menu-icon.test.tsx).
 vi.mock('@strapi/icons', () => ({ Crown: 'Crown' }));
+vi.mock('../../admin/src/components/assistant/MaisonMenuIcon', () => ({ MaisonMenuIcon: 'MaisonMenuIcon' }));
 
 /** The admin app as `register` uses it: it keeps what the plugin adds to the menu and to the Homepage. */
 const registered = () => {
@@ -26,13 +28,14 @@ describe("the plugin's registration with the admin", () => {
     expect(menuLinks[0]).toMatchObject({ to: 'plugins/maison', permissions: PERMISSIONS.page });
   });
 
-  // The assistant drawer comes in phase 6. Until then the menu link's icon is the Crown, as the widgets' icons are.
-  it('draws the menu link with the Crown', () => {
+  // Strapi draws a menu link's icon on every signed-in page, so this icon is how the assistant is on every page (see MaisonMenuIcon.tsx).
+  it("draws the menu link with Maison's own icon, which carries the assistant onto every admin page, and not with the plain Crown", () => {
     const { menuLinks } = registered();
-    expect(menuLinks[0].icon).toBe('Crown');
+    expect(menuLinks[0].icon).toBe(MaisonMenuIcon);
+    expect(menuLinks[0].icon).not.toBe('Crown');
   });
 
-  it('draws the two Homepage widgets with the Crown', () => {
+  it('keeps the Crown for the two Homepage widgets: the assistant is carried by the menu icon only', () => {
     for (const widget of registered().widgets) expect(widget.icon).toBe('Crown');
   });
 

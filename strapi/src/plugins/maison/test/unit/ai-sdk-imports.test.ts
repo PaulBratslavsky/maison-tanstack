@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -148,6 +148,30 @@ describe('scripts/check-esm-import.mjs', () => {
     const result = check({ js: LOADS_DYNAMICALLY });
     expect(result.status).toBe(1);
     expect(result.output).toContain('index.mjs is missing: run npm run build first');
+  });
+
+  // The admin loads TanStack AI statically, in a chunk that opens with the drawer (the browser has no CommonJS problem). Only the server bundle may not.
+  it('checks dist/server by default, and never the admin bundle, which imports the chat packages on purpose', () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'maison-dist-'));
+    try {
+      mkdirSync(path.join(base, 'dist', 'server'), { recursive: true });
+      mkdirSync(path.join(base, 'dist', 'admin'), { recursive: true });
+      for (const name of ['index.js', 'index.mjs']) writeFileSync(path.join(base, 'dist', 'server', name), LOADS_DYNAMICALLY);
+      writeFileSync(path.join(base, 'dist', 'admin', 'index.js'), 'const chat = require("@tanstack/ai-react");\nconst client = require("@tanstack/ai-client");\n');
+      writeFileSync(path.join(base, 'dist', 'admin', 'index.mjs'), 'import { useChat } from "@tanstack/ai-react";\nimport { fetchServerSentEvents } from "@tanstack/ai-client";\n');
+      const clean = spawnSync(process.execPath, [script], { cwd: base, encoding: 'utf8' });
+      expect(clean.status).toBe(0);
+      expect(clean.stdout).toContain(path.join('dist', 'server', 'index.js'));
+      expect(clean.stdout).not.toContain('admin');
+
+      // The same chat packages in the server bundle fail it.
+      writeFileSync(path.join(base, 'dist', 'server', 'index.js'), 'const client = require("@tanstack/ai-client");\n');
+      const dirty = spawnSync(process.execPath, [script], { cwd: base, encoding: 'utf8' });
+      expect(dirty.status).toBe(1);
+      expect(`${dirty.stdout}${dirty.stderr}`).toContain(path.join('dist', 'server', 'index.js'));
+    } finally {
+      rmSync(base, { recursive: true, force: true });
+    }
   });
 
   it("ignores other @tanstack packages: only the AI packages are the plugin's concern", () => {
