@@ -11,6 +11,7 @@
     "dev": "vite dev --host 127.0.0.1 --port 3004 --strictPort",
     "build": "vite build",
     "start": "vite preview --host 127.0.0.1 --port 3004 --strictPort",
+    "start:line": "node ../scripts/line-mode.mjs require-line && vite build && vite preview --host 127.0.0.1 --port 3004 --strictPort",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "typecheck:e2e": "tsc --noEmit -p tsconfig.e2e.json",

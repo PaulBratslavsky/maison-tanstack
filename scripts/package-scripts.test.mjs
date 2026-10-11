@@ -27,3 +27,29 @@ test('the plugin checks its built bundles for a static load of the TanStack AI p
   const { postbuild } = scripts('strapi/src/plugins/maison/package.json');
   assert.equal(postbuild, 'node scripts/check-esm-import.mjs');
 });
+
+test('the root has the LINE mode scripts: mode, mode:line, mode:local, start:line, tunnel and qr', () => {
+  const root = scripts('package.json');
+  assert.equal(root.mode, 'node scripts/line-mode.mjs status');
+  assert.equal(root['mode:line'], 'node scripts/line-mode.mjs line');
+  assert.equal(root['mode:local'], 'node scripts/line-mode.mjs local');
+  assert.equal(root['start:line'], 'npm run start:line --prefix app');
+  assert.equal(root.tunnel, 'node scripts/line-tunnel.mjs');
+  assert.equal(root.qr, 'node app/scripts/line-qr.mjs');
+});
+
+test('npm run dev and npm run dev:app refuse to start in LINE mode, and npm run dev:strapi does not check', () => {
+  const root = scripts('package.json');
+  for (const name of ['dev', 'dev:app']) assert.match(root[name], /^node scripts\/line-mode\.mjs require-local && /, name);
+  assert.equal(root['dev:strapi'], 'npm run develop --prefix strapi');
+});
+
+test('npm run start:line needs LINE mode, builds the app in it, and serves the build on 127.0.0.1:3004 without the verify mock', () => {
+  const steps = scripts('app/package.json')['start:line'].split('&&').map((step) => step.trim());
+  assert.deepEqual(steps, ['node ../scripts/line-mode.mjs require-line', 'vite build', 'vite preview --host 127.0.0.1 --port 3004 --strictPort']);
+  assert.ok(!scripts('app/package.json')['start:line'].includes('mock-line-verify'));
+});
+
+test('the root test script runs every node test, in scripts/ and app/scripts/', () => {
+  assert.match(scripts('package.json').test, /node --test scripts\/\*\.test\.mjs app\/scripts\/\*\.test\.mjs$/);
+});
