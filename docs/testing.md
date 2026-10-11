@@ -82,7 +82,7 @@ Run from `app/`:
 | `npm run typecheck` | `tsc --noEmit` on the app |
 | `npm run typecheck:e2e` | `tsc --noEmit` on the Playwright tests (`tsconfig.e2e.json`) |
 | `npm run typecheck:live` | `tsc --noEmit` on the live tests (`tsconfig.live.json`) |
-| `npm run build` | `vite build`. Rebuild in local mode before `npm start` if `npm run start:line` built `dist` last |
+| `npm run build` | `vite build`. Rebuild in local mode before `npm start` if `npm run start:line` built `.output` last |
 | `npm run test:e2e`, `npm run test:live`, `npm run test:live:claude` | As above. They load `strapi/.env` and `app/.env` |
 
 ## Writing tests
