@@ -38,6 +38,34 @@ describe('conciergeModel', () => {
     expect(label).toBe('gemma4-26b-32k (Ollama at http://127.0.0.1:11500)');
   });
 
+  it('drops a trailing /v1 or /v1/ from OLLAMA_BASE_URL, so a value carried over from maison-demo works', () => {
+    for (const value of ['http://127.0.0.1:11434/v1', 'http://127.0.0.1:11434/v1/', 'http://127.0.0.1:11434/', 'http://127.0.0.1:11434']) {
+      expect(conciergeModel({ OLLAMA_BASE_URL: value }).label, value).toBe('qwen3-14b-32k (Ollama at http://127.0.0.1:11434)');
+    }
+    expect(conciergeModel({ OLLAMA_BASE_URL: 'http://gpu.local:11500/ollama/v1' }).label).toBe('qwen3-14b-32k (Ollama at http://gpu.local:11500/ollama)');
+  });
+
+  it('sends the request to /api/chat on the host, not under /v1', async () => {
+    let path = '';
+    const server = createServer((req, res) => {
+      path = req.url ?? '';
+      req.resume();
+      req.on('end', () => {
+        res.writeHead(200, { 'Content-Type': 'application/x-ndjson' });
+        res.end(`${JSON.stringify({ model: 'qwen3-14b-32k', created_at: '2026-10-10T00:00:00Z', message: { role: 'assistant', content: 'ok' }, done: true, done_reason: 'stop' })}\n`);
+      });
+    });
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const { port } = server.address() as AddressInfo;
+    try {
+      const { adapter, modelOptions } = conciergeModel({ OLLAMA_BASE_URL: `http://127.0.0.1:${port}/v1` });
+      for await (const chunk of chat({ adapter: adapter as never, messages: [{ role: 'user', content: 'Hello' }], modelOptions: modelOptions as never }) as AsyncIterable<StreamChunk>) void chunk;
+    } finally {
+      server.close();
+    }
+    expect(path).toBe('/api/chat');
+  });
+
   it('treats an empty ANTHROPIC_API_KEY, OLLAMA_MODEL and OLLAMA_BASE_URL as not set', () => {
     const { adapter, label } = conciergeModel({ ANTHROPIC_API_KEY: '', OLLAMA_MODEL: '', OLLAMA_BASE_URL: '' });
     expect(adapter.model).toBe('qwen3-14b-32k');

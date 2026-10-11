@@ -13,6 +13,12 @@ const DEFAULT_OLLAMA_MODEL = 'qwen3-14b-32k';
 const DEFAULT_OLLAMA_HOST = 'http://127.0.0.1:11434';
 const OFFLINE_FIX = "Check the laptop's internet connection.";
 
+/**
+ * Ollama's own client wants the host with no path. maison-demo used Ollama's OpenAI-compatible address, which ends in
+ * /v1, so a value carried over from it still works: a trailing /v1 or /v1/ (and any trailing slash) is dropped.
+ */
+const ollamaHost = (value: string) => value.replace(/(\/v1)?\/*$/, '');
+
 const claude = (key: string) => createAnthropicChat(CLAUDE_MODEL, key);
 const ollama = (model: string, host: string) => createOllamaChat(model, host);
 
@@ -39,14 +45,14 @@ export type ConciergeModel =
 
 /**
  * Claude Sonnet 5.5 with ANTHROPIC_API_KEY. With no key, a local model through Ollama's own API (TanStack AI's
- * `@tanstack/ai-ollama`): OLLAMA_MODEL (qwen3-14b-32k) at OLLAMA_BASE_URL (http://127.0.0.1:11434). The original also
+ * `@tanstack/ai-ollama`): OLLAMA_MODEL (qwen3-14b-32k) at OLLAMA_BASE_URL (http://127.0.0.1:11434, with or without a trailing /v1). The original also
  * had Vercel AI Gateway. TanStack AI has no adapter for it, so it is left out. The key goes to the adapter and nowhere else.
  */
 export const conciergeModel = (env: Record<string, string | undefined> = process.env): ConciergeModel => {
   const key = env.ANTHROPIC_API_KEY;
   if (key) return { provider: 'anthropic', adapter: claude(key), modelOptions: undefined, label: 'Claude Sonnet 5.5 (Anthropic)', fix: OFFLINE_FIX };
   const model = env.OLLAMA_MODEL || DEFAULT_OLLAMA_MODEL;
-  const host = env.OLLAMA_BASE_URL || DEFAULT_OLLAMA_HOST;
+  const host = ollamaHost(env.OLLAMA_BASE_URL || DEFAULT_OLLAMA_HOST);
   return {
     provider: 'ollama',
     adapter: ollama(model, host),
