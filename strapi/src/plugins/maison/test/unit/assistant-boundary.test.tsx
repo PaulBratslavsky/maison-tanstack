@@ -25,14 +25,18 @@ vi.mock('../../admin/src/components/assistant/GlobalAssistant', () => {
 const SHOWN = 'The assistant could not load. Reload the page to try again.';
 const OPEN = { name: 'Open the Maison assistant' };
 let logged: ReturnType<typeof vi.spyOn>;
+/** jsdom prints a thrown error as "Uncaught" with its stack unless a listener cancels the error event. The errors here are expected. */
+const keepQuiet = (event: Event) => event.preventDefault();
 
 beforeEach(() => {
   vi.resetModules();
   // React also writes a thrown error to the console. The tests read what was written, so it is kept quiet and recorded.
   logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+  window.addEventListener('error', keepQuiet);
 });
 afterEach(async () => {
   cleanup();
+  window.removeEventListener('error', keepQuiet);
   const { destroyHost } = await import('../../admin/src/components/assistant/assistantHost');
   destroyHost();
   failure.mode = 'none';
