@@ -31,7 +31,7 @@ describe('the product knowledge seed', () => {
   });
 });
 
-// content.json is the source of truth: what an entry says about a piece has to hold for the piece the catalog has.
+// content.json holds both the entries and the catalog: what an entry says about a piece has to hold for the piece the catalog has.
 describe('the product knowledge seed and the demo catalog', () => {
   it('tags the canvas care and storage entries with every piece the catalog files under trunk, the trunks and hard cases', () => {
     const trunks = content.products.filter((product) => product.category === 'trunk').map((product) => product.slug).sort();

@@ -18,7 +18,7 @@ const KEYWORDS = 2;
 const ANSWER = 1;
 const PRODUCT_BONUS = 2;
 
-/** Words that name no topic: an English question's glue, and a few Japanese question words. */
+/** Words that name no topic: the common English function words, and a few Japanese question words. */
 const STOPWORDS = new Set([
   'a', 'about', 'an', 'and', 'any', 'are', 'at', 'be', 'by', 'can', 'could', 'did', 'do', 'does', 'for', 'from', 'get',
   'has', 'have', 'hello', 'hi', 'how', 'i', 'if', 'in', 'is', 'it', 'its', 'maison', 'me', 'my', 'need', 'of', 'on', 'or',
