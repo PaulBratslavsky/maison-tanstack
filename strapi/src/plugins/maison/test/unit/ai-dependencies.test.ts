@@ -11,6 +11,9 @@ const PINNED = {
   '@tanstack/ai': '0.68.0',
   '@tanstack/ai-anthropic': '0.21.1',
   '@tanstack/ai-ollama': '0.11.16',
+  // The admin's chat. Its drawer reads the stream with these two, and they use the same copy of `@tanstack/ai` as the server.
+  '@tanstack/ai-client': '0.39.2',
+  '@tanstack/ai-react': '0.30.3',
 } as const;
 
 describe('the TanStack AI packages', () => {
@@ -22,6 +25,11 @@ describe('the TanStack AI packages', () => {
     const tanstack = Object.entries(manifest.dependencies).filter(([name]) => name.startsWith('@tanstack/'));
     expect(tanstack.map(([name]) => name).sort()).toEqual(Object.keys(PINNED).sort());
     for (const [name, version] of tanstack) expect(version, name).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+
+  it('give the admin Markdown packages as dependencies, in ranges that work with React 18', () => {
+    expect(manifest.dependencies['react-markdown']).toMatch(/^\^9\./);
+    expect(manifest.dependencies['remark-gfm']).toMatch(/^\^4\./);
   });
 
   it('are the only way the plugin reaches a model: the Vercel AI SDK is in neither dependencies nor devDependencies', () => {
