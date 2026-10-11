@@ -37,3 +37,15 @@ describe('the TanStack AI packages', () => {
     expect(names.filter((name) => name === 'ai' || name.startsWith('@ai-sdk/'))).toEqual([]);
   });
 });
+
+/** What the component tests run on. They are only for the tests, so they are in `devDependencies` and never ship with the plugin. */
+describe('the component test packages', () => {
+  it.each([
+    ['jsdom', '^25.0.1'],
+    ['@testing-library/react', '^16.3.3'],
+    ['@testing-library/user-event', '^14.6.7'],
+  ])('declare %s %s in devDependencies, and not in dependencies', (name, range) => {
+    expect(manifest.devDependencies[name]).toBe(range);
+    expect(manifest.dependencies[name]).toBeUndefined();
+  });
+});
