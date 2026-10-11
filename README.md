@@ -23,6 +23,8 @@ This repository rebuilds [maison-demo](https://github.com/PaulBratslavsky/maison
 | Ports | Strapi 1338, app 3003, verify mock 4545, LINE stand-in 4010 | Strapi 1339, app 3004, verify mock 4546, LINE stand-in 4011 |
 | Not found | No screen | A plain not-found screen |
 
+`ai` and `@ai-sdk/*` appear in Strapi's lockfile only as dependencies of Strapi's own `@strapi/content-type-builder`. No code in this project imports them.
+
 Both projects can run at once. `docs/progress.md` lists every other deliberate difference, with its reason.
 
 ## Quick start

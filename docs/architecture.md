@@ -100,7 +100,7 @@ One LINE client can be active in Strapi at a time. Tools never take the customer
 
 ## TanStack AI
 
-All model calls go through TanStack AI 0.68.0, and the TanStack AI packages are pinned to exact versions. No code in this repository imports the Vercel AI SDK, and none calls a model provider with `fetch`.
+All model calls go through TanStack AI 0.68.0, and the TanStack AI packages are pinned to exact versions. No code in this repository imports the Vercel AI SDK, and none calls a model provider with `fetch`. `ai` and `@ai-sdk/*` appear in Strapi's lockfile only as dependencies of Strapi's own `@strapi/content-type-builder`. No code in this project imports them.
 
 ### The concierge, on the app's server
 
