@@ -1,0 +1,14 @@
+# What `vercel deploy` from app/ leaves out. The app's settings live in the Vercel project, never in an uploaded file.
+.env
+.env.*
+!.env.example
+.vercel
+.output
+.nitro
+.tanstack
+dist
+node_modules
+playwright-report
+test-results
+line/qr
+*.tsbuildinfo
