@@ -111,6 +111,8 @@ Format: `Ruling: <what> - <why> - <cost if wrong>`.
 - Ruling: the app's `dev` and `start` run the verify mock with `--reuse` (idle when 4546 is taken), and the root `dev` starts it once through the app - running the halves apart had left sign-in broken - none.
 - Ruling: `OLLAMA_BASE_URL` may end in `/v1`, as in maison-demo; the concierge strips it - the TanStack Ollama adapter wants the bare host - none.
 - Ruling: the concierge's four shared live cases (demo gift question, demo picker, care question, bitcoin hand-off) run on the chosen model, so `test:live:claude` runs them too - the original kept them Ollama-only, so a Claude run skipped two of the spec's three live checks - a Claude run costs a few more turns.
+- Ruling: Paul asked on 11 October 2026 for a table of the newest inquiries on the "Maison inquiries" Homepage widget, as the requests widget has; the original had only the four cards. It reads the existing `GET /maison/inquiries?filter=all&limit=5`, so the server does not change - his decision - one more admin request every 5 seconds on the Homepage.
+- Ruling: every Strapi Homepage widget body is a fixed 261 px with its own scroll; the Maison widgets keep their cards on top and scroll the table in the height left - Strapi 5.57 `WidgetRoot` - a narrow widget leaves the table little room.
 - Ruling: `init-env` does not read multi-line quoted values - no `.env` here has one - a key inside such a value would count as present and not be added.
 
 ## Open with Paul
