@@ -46,7 +46,7 @@ describe('admin routes', () => {
 
   it('each require a signed-in admin with the matching Maison permission', () => {
     expect(routes.admin.type).toBe('admin');
-    expect(routes.admin.routes).toHaveLength(22);
+    expect(routes.admin.routes).toHaveLength(24);
     expect(policiesOf('GET', '/appointments')).toEqual(gate('plugin::maison.appointments.review'));
     expect(policiesOf('GET', '/appointments/summary')).toEqual(gate('plugin::maison.appointments.review'));
     expect(policiesOf('POST', '/appointments/:reference/confirm')).toEqual(gate('plugin::maison.appointments.confirm'));
@@ -64,6 +64,9 @@ describe('admin routes', () => {
     expect(policiesOf('POST', '/inquiries/:documentId/close')).toEqual(gate('plugin::maison.inquiries.reply'));
     expect(policiesOf('POST', '/inquiries/:documentId/label')).toEqual(gate('plugin::maison.inquiries.reply'));
     expect(policiesOf('POST', '/inquiries/:documentId/label-again')).toEqual(gate('plugin::maison.inquiries.reply'));
+    // The Ask tab's two routes, for admins who hold "Use the Maison assistant".
+    expect(policiesOf('GET', '/assistant/status')).toEqual(gate('plugin::maison.assistant.use'));
+    expect(policiesOf('POST', '/assistant/chat')).toEqual(gate('plugin::maison.assistant.use'));
     // The Ask tab's saved chats: the same permission as the chat. Each admin sees only their own.
     expect(policiesOf('GET', '/conversations')).toEqual(gate('plugin::maison.assistant.use'));
     expect(policiesOf('POST', '/conversations')).toEqual(gate('plugin::maison.assistant.use'));
@@ -97,6 +100,11 @@ describe('admin routes', () => {
       'GET /inquiries/summary',
       'GET /inquiries/quota',
     ]);
+  });
+
+  it('send the Ask tab to the assistant controller', () => {
+    expect(routeOf('GET', '/assistant/status')?.handler).toBe('assistant.status');
+    expect(routeOf('POST', '/assistant/chat')?.handler).toBe('assistant.chat');
   });
 
   it('send the customer questions to the questions controller', () => {

@@ -7,7 +7,7 @@ import register from './register';
 import routes from './routes';
 import services from './services';
 
-// The plugin's server entry. The staff assistant routes and controller come in phase 6.
+// The plugin's server entry.
 export default {
   register,
   bootstrap,

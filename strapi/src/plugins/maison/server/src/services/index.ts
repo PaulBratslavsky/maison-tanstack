@@ -1,4 +1,5 @@
 import appointments from './appointments';
+import assistant from './assistant';
 import catalog from './catalog';
 import confirmations from './confirmations';
 import conversations from './conversations';
@@ -12,6 +13,7 @@ import seed from './seed';
 
 export default {
   appointments,
+  assistant,
   catalog,
   confirmations,
   conversations,

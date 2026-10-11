@@ -91,6 +91,9 @@ export default {
         handler: 'inquiries.labelAgain',
         config: { policies: allow(ACTION.inquiriesReply) },
       },
+      // The Ask tab: whether the assistant is ready, and one chat turn. Both need the permission "Use the Maison assistant".
+      { method: 'GET', path: '/assistant/status', handler: 'assistant.status', config: { policies: allow(ACTION.assistantUse) } },
+      { method: 'POST', path: '/assistant/chat', handler: 'assistant.chat', config: { policies: allow(ACTION.assistantUse) } },
       // The Ask tab's saved chats: each admin's own, for admins who hold the same permission as the chat.
       { method: 'GET', path: '/conversations', handler: 'conversations.list', config: { policies: allow(ACTION.assistantUse) } },
       { method: 'POST', path: '/conversations', handler: 'conversations.create', config: { policies: allow(ACTION.assistantUse) } },
