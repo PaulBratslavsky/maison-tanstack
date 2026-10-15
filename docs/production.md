@@ -1,6 +1,22 @@
 # Deploying and running in production
 
-The two halves deploy separately: the app in `app/` to [Vercel](https://vercel.com), and Strapi in `strapi/` to [Strapi Cloud](https://strapi.io/cloud). The code is ready for both. Nothing in this repository deploys anything, and nothing has run on Vercel or Strapi Cloud yet. Where this page says "expected", it is from documentation or from the installed packages, not from a run on those hosts.
+The two halves deploy separately: the app in `app/` to [Vercel](https://vercel.com), and Strapi in `strapi/` to [Strapi Cloud](https://strapi.io/cloud). Both have been live since 13 October 2026. Every push to `main` deploys both.
+
+## The live setup
+
+| Part | Where | Built from |
+| --- | --- | --- |
+| Strapi | The existing Strapi Cloud project, on its existing PostgreSQL database | This repository, branch `main`, base directory `strapi` |
+| The app | A Vercel project of its own, `maison-tanstack`, at `https://maison-tanstack.vercel.app` | This repository, branch `main`, root directory `app`, no framework preset (Nitro writes Vercel's build output) |
+| LINE | The existing LIFF app, with its endpoint URL changed to the address above | |
+
+- **The Vercel variables** are `VITE_LIFF_MOCK=false`, `VITE_LIFF_ID`, `VITE_STRAPI_URL` (the app's own address), `VITE_MAISON_CLIENT_ID` and `VITE_LINE_OA_ID` (built into the app), and `STRAPI_URL` and `ANTHROPIC_API_KEY` (server only, the key stored as Sensitive). The LIFF ID, client ID and Official Account ID are the same as the original app's.
+- **Strapi Cloud's variables** did not change.
+- **The original Next app** is still deployed on its own Vercel project, untouched, but LINE no longer opens it.
+- **Checked on 13 October 2026:** the build, the 60 second concierge function, the server-function CSRF check behind Vercel (a request from the app's own origin without `Sec-Fetch-Site` passes; another origin gets 403), the proxy routes, the Home page text from Strapi, the "Open Maison in LINE" page in a desktop browser, and sign-in, the catalog, booking and the concierge in LINE on Paul's phone.
+- **To roll back the app:** set the LIFF app's endpoint URL back to the original app's address. To roll back Strapi: point Strapi Cloud back at the old repository and restore a backup from before 12 October, since Strapi 5.57 has migrated the database.
+
+The sections below were written before the switch, as the plan for it. The switch-over checklist changes the original Vercel project in place; what was done instead is the table above.
 
 ## What was checked on a laptop
 
