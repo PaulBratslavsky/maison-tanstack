@@ -7,7 +7,7 @@ Maison is a demo for a fictional luxury house of trunks, bags and small gifts. I
 - **Staff** work in the Strapi admin. They confirm visit requests, answer questions the concierge handed over, and read every concierge turn, labelled by Claude Haiku. A staff assistant drawer answers questions about all of this.
 - **Strapi sends the confirmation on LINE** when staff confirm a visit, through LINE's Messaging API.
 
-Maison is fictional. It runs on one laptop in local mode: LINE sign-in is simulated with LINE's LIFF mock and a local stand-in for LINE's ID token verify endpoint.
+Maison is fictional. It runs on one laptop in local mode: LINE sign-in is simulated with LINE's LIFF mock and a local stand-in for LINE's ID token verify endpoint. It is also deployed, with Strapi on Strapi Cloud and the app on Vercel ([Production](docs/production.md)).
 
 ## The TanStack edition
 
@@ -134,7 +134,7 @@ Delete the uploads only together with the database. The catalog's images are in 
 | --- | --- |
 | [How Maison works](docs/architecture.md) | The two halves, the MCP paths, sign-in, and where TanStack AI is used |
 | [Testing](docs/testing.md) | Every test command, what it needs and what it leaves behind |
-| [Deploying and running in production](docs/production.md) | Notes for Vercel (the app) and Strapi Cloud (Strapi). Nothing is deployed |
+| [Deploying and running in production](docs/production.md) | The live setup on Vercel (the app) and Strapi Cloud (Strapi), and how it was switched over |
 | [Running with LINE](docs/line-setup.md) | A real LINE message on your phone, the real app inside LINE, and running as a LINE MINI App |
 | [The Maison plugin in this repo](docs/maison-plugin.md) | Where the plugin lives, how it shares Strapi's packages, and a summary of its reference |
 | [The plugin's README](strapi/src/plugins/maison/README.md) | The full reference: tools, routes, permissions, configuration and admin pages |
